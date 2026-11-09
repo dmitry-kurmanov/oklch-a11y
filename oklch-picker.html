@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OKLCH picker · Code by Ear</title>
+  <link rel="stylesheet" href="wireframe-kit.css">
+  <style>
+    #canvas { position: relative; display: grid; grid-template-columns: repeat(4, max-content); column-gap: 96px; }
+    #board-desktop { grid-column: 1; grid-row: 1; }
+    #states { grid-column: 2; grid-row: 1; display: flex; flex-direction: column; gap: 24px; }
+    #board-phone { grid-column: 3; grid-row: 1; }
+    #board-screen-reader { grid-column: 4; grid-row: 1; }
+    #board-estimate { grid-column: 1; grid-row: 2; margin-top: 96px; }
+
+    .desk { width: 880px; border: 1px solid var(--wf-line-strong); border-radius: var(--wf-radius); }
+    .bar { display: flex; align-items: center; gap: 8px; padding: 12px; border-bottom: 1px solid var(--wf-line); background: var(--wf-fill-2); font-weight: 600; }
+    .page { padding: 24px 48px; display: flex; flex-direction: column; gap: 24px; }
+    .phone { width: 320px; }
+    .phone .screen { border: 1px solid var(--wf-line-strong); border-radius: var(--wf-radius); }
+    .phone .page { padding: 16px 12px; gap: 16px; }
+    .state { width: 320px; }
+    .sr { width: 360px; display: flex; flex-direction: column; gap: 8px; }
+
+    .step { display: flex; flex-direction: column; gap: 8px; border-top: 1px solid var(--wf-line); padding-top: 16px; }
+    .heading { display: flex; align-items: baseline; gap: 8px; font-size: 18px; font-weight: 600; }
+    .heading.h1 { font-size: 24px; }
+    .tag { font: 11px ui-monospace, Consolas, monospace; color: var(--wf-muted); border: 1px solid var(--wf-line); border-radius: var(--wf-radius); padding: 0 4px; font-weight: 400; }
+    .row { display: flex; align-items: center; gap: 8px; }
+    .between { justify-content: space-between; }
+    .cols { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+    .field { display: flex; flex-direction: column; gap: 4px; }
+    .input { border: 1px solid var(--wf-line-strong); border-radius: var(--wf-radius); padding: 10px; font-family: ui-monospace, Consolas, monospace; }
+    .input.invalid { border: 2px solid var(--wf-accent); }
+    .error { color: var(--wf-accent); }
+    .btn { border: 1px solid var(--wf-line-strong); border-radius: var(--wf-radius); background: var(--wf-fill-2); text-align: center; padding: 10px 16px; font-weight: 600; white-space: nowrap; }
+    .btn.ghost { background: var(--wf-bg); }
+
+    .swatch { border-radius: var(--wf-radius); display: flex; align-items: center; justify-content: center; min-height: 96px; }
+    .brand { background: #E63946; }
+    .brand-hover { background: #D7283A; }
+    .on-white { color: #fff; }
+    .on-black { color: #000; }
+    .sample { border-radius: var(--wf-radius); padding: 10px 20px; text-align: center; }
+    .regular { font-size: 16px; font-weight: 600; }
+    .large { font-size: 19px; font-weight: 700; }
+    .description { font-size: 20px; font-weight: 600; }
+
+    .slider { display: flex; flex-direction: column; gap: 4px; }
+    .track { position: relative; height: 12px; margin: 10px 12px; border: 1px solid var(--wf-line-strong); border-radius: 6px; background: var(--wf-fill-2); }
+    .thumb { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border: 2px solid var(--wf-text); border-radius: 50%; background: var(--wf-bg); }
+    .phone .thumb { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+    .phone .track { margin: 20px 22px; }
+    .panels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .phone .panels { grid-template-columns: 1fr; }
+    .panel { border: 1px solid var(--wf-line); border-radius: 8px; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+    .panel-name { font-weight: 600; }
+    .chart { display: block; width: 100%; border-top: 1px dashed var(--wf-line); border-bottom: 1px dashed var(--wf-line); }
+    .track.gradient { height: 24px; margin: 4px 12px; border: 1px dashed var(--wf-line-strong); background: none; }
+    .track.gradient canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 5px; }
+    .phone .track.gradient { margin: 10px 22px; }
+
+    fieldset { border: 1px solid var(--wf-line); border-radius: var(--wf-radius); margin: 0; padding: 8px 12px 12px; display: flex; flex-direction: column; gap: 6px; }
+    legend { padding: 0 4px; color: var(--wf-muted); }
+    .radio { min-height: 24px; display: flex; align-items: center; }
+    .phone .radio { min-height: 44px; }
+    .choice { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; align-items: start; }
+    .phone .choice { grid-template-columns: 1fr; }
+    .input.num { width: 64px; padding: 6px 8px; text-align: right; }
+    .input.select { padding: 6px 8px; font-family: var(--wf-font); }
+
+    .verdict { display: flex; gap: 8px; align-items: baseline; }
+    .icon { font-weight: 700; width: 16px; flex: none; }
+    .verdict.fail .icon { color: var(--wf-accent); }
+    .verdict b { font-weight: 600; }
+    .note { border: 1px dashed var(--wf-line-strong); border-radius: var(--wf-radius); padding: 8px; color: var(--wf-muted); font-size: 11px; }
+
+    pre { margin: 0; background: var(--wf-fill); border: 1px solid var(--wf-line); border-radius: var(--wf-radius); padding: 12px; font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; }
+    .braille { font: 13px ui-monospace, Consolas, monospace; background: var(--wf-fill); border: 1px solid var(--wf-line); padding: 6px 8px; white-space: pre; }
+    .sr .wf-box { display: flex; flex-direction: column; gap: 4px; }
+    .said { font-family: ui-monospace, Consolas, monospace; font-size: 12px; }
+
+    footer { border-top: 1px solid var(--wf-line); padding-top: 16px; display: flex; flex-direction: column; gap: 6px; }
+    .link { text-decoration: underline; }
+
+    #estimate-grid { width: 880px; grid-template-columns: 1.6fr 56px 56px 2fr; }
+
+    .flow { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+    .flow path { fill: none; stroke: var(--wf-accent); stroke-width: 2; }
+  </style>
+</head>
+<body>
+  <div class="wf-canvas" id="canvas">
+
+    <section class="wf-artboard" id="board-desktop">
+      <p class="wf-artboard-title">1 · Desktop · one page, default example #E63946</p>
+      <div class="desk">
+        <div class="bar">OKLCH picker · Code by Ear</div>
+        <main class="page">
+          <div class="heading h1"><span class="tag">h1</span>OKLCH picker</div>
+
+          <section class="step" id="step-1">
+            <div class="heading"><span class="tag">h2</span>1. Enter color</div>
+            <div class="field" id="step-1-input" style="max-width:360px">
+              <span>Brand color</span>
+              <div class="input">#E63946</div>
+              <span class="wf-caption">#E63946, rgb(), hsl() or oklch()</span>
+            </div>
+          </section>
+
+          <section class="step" id="step-2">
+            <div class="heading"><span class="tag">h2</span>2. Color description</div>
+            <div class="row" style="gap:16px">
+              <div class="swatch brand" id="swatch" style="width:160px; min-height:72px"></div>
+              <div style="display:flex; flex-direction:column; gap:4px">
+                <div class="description" id="description">Vivid warm red, 61%</div>
+                <div class="wf-caption">oklch(61.2% 0.208 22.2)</div>
+              </div>
+            </div>
+            <div class="panels" id="panels">
+              <div class="panel" id="panel-l">
+                <div class="row between"><span class="panel-name">Lightness</span><span>61%</span></div>
+                <canvas class="chart" data-x="l" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient" id="slider-l"><canvas data-x="l" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:61.2%"></div></div>
+                <span class="wf-caption">left — darker, right — lighter</span>
+              </div>
+              <div class="panel" id="panel-c">
+                <div class="row between"><span class="panel-name">Chroma</span><span>vivid</span></div>
+                <canvas class="chart" data-x="h" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient" id="slider-c"><canvas data-x="c" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:56%"></div></div>
+                <span class="wf-caption">left — greyer, right — more vivid</span>
+              </div>
+              <div class="panel" id="panel-h">
+                <div class="row between"><span class="panel-name">Hue</span><span>red, 22°</span></div>
+                <canvas class="chart" data-x="h" data-y="l" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient" id="slider-h"><canvas data-x="h" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:6.2%"></div></div>
+                <span class="wf-caption">left — more pink, right — more orange</span>
+              </div>
+            </div>
+            <span class="wf-caption">Charts: slices from oklch-picker (view/chart), sRGB only here · all images: aria-hidden, not focusable · mouse click picks a color · same as the sliders</span>
+          </section>
+
+          <section class="step" id="step-3">
+            <div class="heading"><span class="tag">h2</span>3. Text color</div>
+            <div class="choice" id="step-3-choice">
+              <fieldset>
+                <legend>Text color</legend>
+                <span class="radio">◉ White</span>
+                <span class="radio">○ Black</span>
+              </fieldset>
+              <fieldset>
+                <legend>Text size</legend>
+                <label class="field"><span>Font size</span><span class="row"><span class="input num">19</span>px <span class="wf-caption">1.1875rem</span></span></label>
+                <label class="field"><span>Font weight</span><span class="input select">700 · Bold ▾</span></label>
+                <span class="wf-caption">Any size · weight 100–900</span>
+              </fieldset>
+              <div class="btn ghost" id="btn-recommend">Show recommendation</div>
+            </div>
+            <div class="row" style="gap:16px; align-items:center">
+              <div class="sample brand on-white large">Button</div>
+              <div style="display:flex; flex-direction:column; gap:2px">
+                <div class="verdict"><span class="icon">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></div>
+                <div class="verdict"><span class="icon">✓</span><span>Reads well. <span class="wf-caption">APCA Lc 73</span></span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" id="step-4">
+            <div class="heading"><span class="tag">h2</span>4. Hover</div>
+            <div class="slider" id="slider-hover" style="max-width:360px">
+              <div class="row between"><span>Hover shift</span><span>4% darker</span></div>
+              <div class="track"><div class="thumb" style="left:40%"></div></div>
+              <span class="wf-caption">Darker, because the text is white · black text → lighter</span>
+            </div>
+            <div class="cols">
+              <div style="display:flex; flex-direction:column; gap:6px">
+                <span class="wf-caption">Normal · #E63946</span>
+                <div class="sample brand on-white large">Button</div>
+                <div class="verdict"><span class="icon">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></div>
+                <div class="verdict"><span class="icon">✓</span><span>Reads well. <span class="wf-caption">APCA Lc 73</span></span></div>
+              </div>
+              <div style="display:flex; flex-direction:column; gap:6px" id="hover-sample">
+                <span class="wf-caption">Hover · #D7283A</span>
+                <div class="sample brand-hover on-white large">Button</div>
+                <div class="verdict"><span class="icon">✓</span><b>Passes WCAG AA, 4.94:1 (needs 4.5:1).</b></div>
+                <div class="verdict"><span class="icon">✓</span><span>Reads well. <span class="wf-caption">APCA Lc 78</span></span></div>
+              </div>
+            </div>
+          </section>
+
+          <section class="step" id="step-5">
+            <div class="heading"><span class="tag">h2</span>5. Result CSS</div>
+<pre id="css-code">--brand: oklch(61.2% 0.208 22.2);                            /* #E63946, given */
+
+/* picked by the tool */
+--brand-hover: #D7283A;
+--brand-hover: oklch(from var(--brand) calc(l - 0.04) c h);
+--brand-text: #fff;                                          /* same on hover */
+--brand-text-size: 1.1875rem;                                /* 19px, minimum for contrast */
+--brand-text-weight: 700;</pre>
+            <div class="row"><div class="btn" id="btn-copy">Copy Result CSS</div></div>
+          </section>
+
+          <footer id="footer">
+            <div class="wf-label" style="font-weight:600">Made by Code by Ear</div>
+            <div class="wf-placeholder" style="justify-content:flex-start; padding:8px">Short story: built for the school's blind and low-vision students</div>
+            <span class="link" id="link-waitlist">Join the waitlist for the next course</span>
+            <span class="wf-caption">codebyear.school/waitlist?utm_source=oklch-picker</span>
+            <span class="wf-caption">Built on oklch-picker by Evil Martians</span>
+          </footer>
+        </main>
+      </div>
+    </section>
+
+    <div id="states">
+      <section class="wf-artboard state" id="state-input-error">
+        <p class="wf-artboard-title">1a · Step 1 · input error</p>
+        <div class="field">
+          <span>Brand color</span>
+          <div class="input invalid">#E6394</div>
+          <span class="error">✗ Can’t read this color. Try #E63946</span>
+          <span class="wf-caption">Error linked to the field via aria-describedby</span>
+        </div>
+      </section>
+
+      <section class="wf-artboard state" id="state-white-regular">
+        <p class="wf-artboard-title">3a · Step 3 · White, 16px, 600</p>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <div class="sample brand on-white regular">Button</div>
+          <div class="verdict fail"><span class="icon">✗</span><span><b>Fails WCAG AA, 4.17:1 (needs 4.5:1).</b> Try large bold text.</span></div>
+          <div class="verdict"><span class="icon">✓</span><span>Reads well. <span class="wf-caption">APCA Lc 73</span></span></div>
+        </div>
+      </section>
+
+      <section class="wf-artboard state" id="state-black-regular">
+        <p class="wf-artboard-title">3b · Step 3 · Black, 16px, 600</p>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <div class="sample brand on-black regular">Button</div>
+          <div class="verdict"><span class="icon">✓</span><b>Passes WCAG AA, 5.04:1 (needs 4.5:1).</b></div>
+          <div class="verdict fail"><span class="icon">✗</span><span>Hard to read. <span class="wf-caption">APCA Lc 37</span></span></div>
+          <span class="wf-caption">WCAG passes, APCA says no — the case the lesson is about</span>
+        </div>
+      </section>
+
+      <section class="wf-artboard state" id="state-recommendation">
+        <p class="wf-artboard-title">3c · Step 3 · after Show recommendation</p>
+        <div style="display:flex; flex-direction:column; gap:8px">
+          <div class="choice" style="grid-template-columns: 1fr 1fr">
+            <fieldset>
+              <legend>Text color</legend>
+              <span class="radio">◉ White</span>
+              <span class="radio">○ Black</span>
+            </fieldset>
+            <fieldset>
+              <legend>Text size</legend>
+              <label class="field"><span>Font size</span><span class="row"><span class="input num">19</span>px <span class="wf-caption">1.1875rem</span></span></label>
+              <label class="field"><span>Font weight</span><span class="input select">700 · Bold ▾</span></label>
+              <span class="wf-caption">Any size · weight 100–900</span>
+            </fieldset>
+          </div>
+          <div class="wf-box" style="display:flex; flex-direction:column; gap:4px">
+            <div class="wf-label" style="font-weight:600">Recommended: white, 19px, bold (700)</div>
+            <div class="wf-caption">Mid-lightness background: only large text reaches the contrast.</div>
+          </div>
+          <span class="wf-caption">The button sets text color, font size and font weight; the verdict updates</span>
+        </div>
+      </section>
+
+      <section class="wf-artboard state" id="state-copied">
+        <p class="wf-artboard-title">5a · Step 5 · after Copy Result CSS</p>
+        <div class="row"><div class="btn">Copy Result CSS</div><span>✓ CSS copied</span></div>
+        <span class="wf-caption">Also said via the live region</span>
+      </section>
+    </div>
+
+    <section class="wf-artboard phone" id="board-phone">
+      <p class="wf-artboard-title">2 · iPhone · same as 400% zoom of 1280px</p>
+      <div class="screen">
+        <main class="page">
+          <div class="heading h1"><span class="tag">h1</span>OKLCH picker</div>
+          <section class="step">
+            <div class="heading"><span class="tag">h2</span>1. Enter color</div>
+            <div class="field">
+              <span>Brand color</span>
+              <div class="input">#E63946</div>
+              <span class="wf-caption">#E63946, rgb(), hsl() or oklch()</span>
+            </div>
+          </section>
+          <section class="step" id="phone-step-2">
+            <div class="heading"><span class="tag">h2</span>2. Color description</div>
+            <div class="swatch brand" style="min-height:72px"></div>
+            <div class="description">Vivid warm red, 61%</div>
+            <div class="panels">
+              <div class="panel">
+                <div class="row between"><span class="panel-name">Lightness</span><span>61%</span></div>
+                <canvas class="chart" data-x="l" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient"><canvas data-x="l" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:61.2%"></div></div>
+                <span class="wf-caption">left — darker, right — lighter</span>
+              </div>
+              <div class="panel">
+                <div class="row between"><span class="panel-name">Chroma</span><span>vivid</span></div>
+                <canvas class="chart" data-x="h" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient"><canvas data-x="c" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:56%"></div></div>
+                <span class="wf-caption">left — greyer, right — more vivid</span>
+              </div>
+              <div class="panel">
+                <div class="row between"><span class="panel-name">Hue</span><span>red, 22°</span></div>
+                <canvas class="chart" data-x="h" data-y="l" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track gradient"><canvas data-x="h" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:6.2%"></div></div>
+                <span class="wf-caption">left — more pink, right — more orange</span>
+              </div>
+            </div>
+          </section>
+          <section class="step">
+            <div class="heading"><span class="tag">h2</span>3. Text color</div>
+            <div class="choice">
+              <fieldset>
+                <legend>Text color</legend>
+                <span class="radio">◉ White</span>
+                <span class="radio">○ Black</span>
+              </fieldset>
+              <fieldset>
+                <legend>Text size</legend>
+                <label class="field"><span>Font size</span><span class="row"><span class="input num">19</span>px <span class="wf-caption">1.1875rem</span></span></label>
+                <label class="field"><span>Font weight</span><span class="input select">700 · Bold ▾</span></label>
+                <span class="wf-caption">Any size · weight 100–900</span>
+              </fieldset>
+              <div class="btn ghost">Show recommendation</div>
+            </div>
+            <div class="sample brand on-white large">Button</div>
+            <div class="verdict"><span class="icon">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></div>
+            <div class="verdict"><span class="icon">✓</span><span>Reads well. <span class="wf-caption">APCA Lc 73</span></span></div>
+          </section>
+          <div class="note">Steps 4–5 and the footer: same blocks, one column · no horizontal scroll · touch targets 44px</div>
+        </main>
+      </div>
+    </section>
+
+    <section class="wf-artboard sr" id="board-screen-reader">
+      <p class="wf-artboard-title">3 · Screen reader · what NVDA says</p>
+      <div class="wf-box" id="sr-headings">
+        <div class="wf-label" style="font-weight:600">Headings (H key)</div>
+        <span class="said">h1 OKLCH picker</span>
+        <span class="said">h2 1. Enter color</span>
+        <span class="said">h2 2. Color description</span>
+        <span class="said">h2 3. Text color</span>
+        <span class="said">h2 4. Hover</span>
+        <span class="said">h2 5. Result CSS</span>
+      </div>
+      <div class="wf-box" id="sr-sliders">
+        <div class="wf-label" style="font-weight:600">Sliders · custom, role="slider"</div>
+        <span class="said">Lightness, slider, 61% lightness</span>
+        <span class="said">Chroma, slider, vivid</span>
+        <span class="said">Hue, slider, red, 22 degrees</span>
+        <span class="wf-caption">Not native range: NVDA reads a native range on every arrow step. Custom slider stays silent while the arrow is held</span>
+        <span class="wf-caption">Hue wraps 360 → 0 with the arrows</span>
+      </div>
+      <div class="wf-box" id="sr-live">
+        <div class="wf-label" style="font-weight:600">Live region · polite</div>
+        <span class="wf-caption">Arrow held → silent. ~500 ms after the last change, once:</span>
+        <span class="said">Vivid warm red, 61%. Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</span>
+        <span class="said">Reads well according to APCA.</span>
+      </div>
+      <div class="wf-box" id="sr-braille">
+        <div class="wf-label" style="font-weight:600">Braille display · 40 cells</div>
+        <div class="braille">Vivid warm red, 61%. Large text only. Pa
+sses WCAG AA, 4.17:1 (needs 3:1).</div>
+        <span class="wf-caption">The first line carries the color and the limit</span>
+      </div>
+      <div class="wf-box" id="sr-other">
+        <div class="wf-label" style="font-weight:600">Other</div>
+        <span class="said">Brand color, edit, invalid entry, Can’t read this color. Try #E63946</span>
+        <span class="said">CSS copied</span>
+        <span class="wf-caption">All images (charts, slider gradients, swatches) are aria-hidden and skipped</span>
+      </div>
+    </section>
+
+    <section class="wf-artboard" id="board-estimate">
+      <p class="wf-artboard-title">Estimate · draft</p>
+      <div class="wf-grid" id="estimate-grid">
+        <div class="wf-grid-cell wf-grid-head">Task</div>
+        <div class="wf-grid-cell wf-grid-head">Days</div>
+        <div class="wf-grid-cell wf-grid-head">Hours</div>
+        <div class="wf-grid-cell wf-grid-head">Notes</div>
+
+        <div class="wf-grid-cell wf-grid-group" style="grid-column: 1 / -1;">Design</div>
+
+        <div class="wf-grid-cell">Visual style for the public launch</div>
+        <div class="wf-grid-cell">1.5</div>
+        <div class="wf-grid-cell">12</div>
+        <div class="wf-grid-cell wf-caption">Own Code by Ear look, not oklch.com · light / dark, high contrast</div>
+
+        <div class="wf-grid-cell wf-grid-group" style="grid-column: 1 / -1;">Development</div>
+
+        <div class="wf-grid-cell">Project setup</div>
+        <div class="wf-grid-cell">0.5</div>
+        <div class="wf-grid-cell">4</div>
+        <div class="wf-grid-cell wf-caption">Static site, vanilla JS</div>
+
+        <div class="wf-grid-cell">Port from oklch-picker</div>
+        <div class="wf-grid-cell">1.5</div>
+        <div class="wf-grid-cell">12</div>
+        <div class="wf-grid-cell wf-caption">Color parsing, chart, range tracks, sample, code · MIT notices</div>
+
+        <div class="wf-grid-cell">Step 1 · Enter color</div>
+        <div class="wf-grid-cell">0.5</div>
+        <div class="wf-grid-cell">4</div>
+        <div class="wf-grid-cell wf-caption">HEX, rgb(), hsl(), oklch(), error text</div>
+
+        <div class="wf-grid-cell">Step 2 · Color description</div>
+        <div class="wf-grid-cell">2</div>
+        <div class="wf-grid-cell">16</div>
+        <div class="wf-grid-cell wf-caption">Color words, three L / C / H panels: chart, gradient slider, hint</div>
+
+        <div class="wf-grid-cell">Custom sliders and announcements</div>
+        <div class="wf-grid-cell">2</div>
+        <div class="wf-grid-cell">16</div>
+        <div class="wf-grid-cell wf-caption">role="slider" with keyboard, touch and aria-valuetext · debounced live region, silent while the arrow is held</div>
+
+        <div class="wf-grid-cell">Contrast and recommendation</div>
+        <div class="wf-grid-cell">1.5</div>
+        <div class="wf-grid-cell">12</div>
+        <div class="wf-grid-cell wf-caption">WCAG 2 + APCA, verdict texts, unit tests on the 6 test colors</div>
+
+        <div class="wf-grid-cell">Step 3 · Text color</div>
+        <div class="wf-grid-cell">1</div>
+        <div class="wf-grid-cell">8</div>
+        <div class="wf-grid-cell wf-caption">Radio groups, verdict, Show recommendation</div>
+
+        <div class="wf-grid-cell">Steps 4–5 · Hover, CSS</div>
+        <div class="wf-grid-cell">1</div>
+        <div class="wf-grid-cell">8</div>
+        <div class="wf-grid-cell wf-caption">Hover shift slider, both verdicts, Copy Result CSS</div>
+
+        <div class="wf-grid-cell">System settings and layout</div>
+        <div class="wf-grid-cell">1.5</div>
+        <div class="wf-grid-cell">12</div>
+        <div class="wf-grid-cell wf-caption">Zoom 400%, mobile, forced-colors, reduced motion, rem</div>
+
+        <div class="wf-grid-cell">Footer and deploy</div>
+        <div class="wf-grid-cell">0.5</div>
+        <div class="wf-grid-cell">4</div>
+        <div class="wf-grid-cell wf-caption">School story, waitlist link with UTM, hosting</div>
+
+        <div class="wf-grid-cell">Testing</div>
+        <div class="wf-grid-cell">2</div>
+        <div class="wf-grid-cell">16</div>
+        <div class="wf-grid-cell wf-caption">NVDA + Firefox, VoiceOver on Mac and iPhone, axe</div>
+
+        <div class="wf-grid-cell">Review, fixes and communication</div>
+        <div class="wf-grid-cell">3</div>
+        <div class="wf-grid-cell">24</div>
+        <div class="wf-grid-cell wf-caption">Student tests Nov 7–16, Andrey's check Nov 24–30, fixes after the lesson</div>
+
+        <div class="wf-grid-cell">Buffer 20%</div>
+        <div class="wf-grid-cell">3.5</div>
+        <div class="wf-grid-cell">28</div>
+        <div class="wf-grid-cell wf-caption"></div>
+
+        <div class="wf-grid-cell wf-grid-head">Total</div>
+        <div class="wf-grid-cell wf-grid-head">22</div>
+        <div class="wf-grid-cell wf-grid-head">176</div>
+        <div class="wf-grid-cell wf-grid-head"></div>
+      </div>
+      <p class="wf-caption" style="margin:8px 0 0">1 day = 8 hours · budget and rate not set · to be refined</p>
+      <p class="wf-caption" style="margin:4px 0 0">Not included: free mode, blind-zone hints, gamut warnings, backlog (spec 10.7, 9)</p>
+      <p class="wf-caption" style="margin:4px 0 0">Dates: working version Nov 24 · lesson and public launch Dec 1</p>
+    </section>
+
+    <svg class="flow" id="flow">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" style="fill: var(--wf-accent); stroke: none"></path>
+        </marker>
+      </defs>
+    </svg>
+
+  </div>
+  <script src="wireframe-kit.js"></script>
+  <script>
+    (function () {
+      var current = { l: 0.612, c: 0.208, h: 22.2 };
+      var range = { l: 1, c: 0.37, h: 360 };
+
+      function toSrgb(L, C, h) {
+        var a = C * Math.cos(h * Math.PI / 180), b = C * Math.sin(h * Math.PI / 180);
+        var l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
+        var m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);
+        var s = Math.pow(L - 0.0894841775 * a - 1.2914855480 * b, 3);
+        return [
+          4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+          -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+          -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        ];
+      }
+
+      function encode(v) {
+        return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+      }
+
+      document.querySelectorAll('canvas[data-x]').forEach(function (cv) {
+        var x = cv.dataset.x, y = cv.dataset.y, w = cv.width, h = cv.height;
+        var ctx = cv.getContext('2d'), img = ctx.createImageData(w, h);
+        for (var j = 0; j < h; j++) {
+          for (var i = 0; i < w; i++) {
+            var v = { l: current.l, c: current.c, h: current.h };
+            v[x] = i / (w - 1) * range[x];
+            if (y) v[y] = (1 - j / (h - 1)) * range[y];
+            var rgb = toSrgb(v.l, v.c, v.h);
+            if (!rgb.every(function (n) { return n >= -1e-4 && n <= 1 + 1e-4; })) continue;
+            var k = (j * w + i) * 4;
+            img.data[k] = encode(Math.min(1, Math.max(0, rgb[0])));
+            img.data[k + 1] = encode(Math.min(1, Math.max(0, rgb[1])));
+            img.data[k + 2] = encode(Math.min(1, Math.max(0, rgb[2])));
+            img.data[k + 3] = 255;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+        if (!y) return;
+        ctx.strokeStyle = 'rgba(0,0,0,.45)';
+        ctx.beginPath();
+        var px = Math.round(current[x] / range[x] * (w - 1)) + 0.5;
+        var py = Math.round((1 - current[y] / range[y]) * (h - 1)) + 0.5;
+        ctx.moveTo(px, 0); ctx.lineTo(px, h);
+        ctx.moveTo(0, py); ctx.lineTo(w, py);
+        ctx.stroke();
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var canvas = document.getElementById('canvas');
+      var svg = document.getElementById('flow');
+      var NS = 'http://www.w3.org/2000/svg';
+      var links = [
+        { from: 'step-1-input', to: 'state-input-error' },
+        { from: 'step-3-choice', to: 'state-white-regular' },
+        { from: 'step-3-choice', to: 'state-black-regular' },
+        { from: 'btn-recommend', to: 'state-recommendation' },
+        { from: 'btn-copy', to: 'state-copied' }
+      ];
+
+      function box(id) {
+        var r = document.getElementById(id).getBoundingClientRect();
+        var c = canvas.getBoundingClientRect();
+        return { l: r.left - c.left, t: r.top - c.top, w: r.width, h: r.height };
+      }
+
+      function draw() {
+        svg.querySelectorAll('.link').forEach(function (n) { n.remove(); });
+        svg.setAttribute('width', canvas.scrollWidth);
+        svg.setAttribute('height', canvas.scrollHeight);
+        var desk = box('board-desktop');
+        links.forEach(function (k) {
+          var a = box(k.from), b = box(k.to);
+          var x1 = desk.l + desk.w, y1 = a.t + a.h / 2;
+          var x2 = b.l, y2 = b.t + 24;
+          var d = (x2 - x1) / 2;
+          var p = document.createElementNS(NS, 'path');
+          p.setAttribute('class', 'link');
+          p.setAttribute('d', 'M' + x1 + ' ' + y1 + ' C' + (x1 + d) + ' ' + y1 + ' ' + (x2 - d) + ' ' + y2 + ' ' + x2 + ' ' + y2);
+          p.setAttribute('marker-end', 'url(#arrow)');
+          svg.appendChild(p);
+        });
+      }
+
+      window.addEventListener('load', draw);
+      window.addEventListener('resize', draw);
+    })();
+  </script>
+</body>
+</html>
