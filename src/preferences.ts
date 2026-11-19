@@ -1,5 +1,4 @@
 const THEME_KEY = 'theme'
-const LARGE_VIEW_KEY = 'large-view'
 
 function read(key: string): string | null {
   try {
@@ -17,7 +16,7 @@ function write(key: string, value: string): void {
   }
 }
 
-export function initPreferences(themeToggle: HTMLInputElement, largeViewButton: HTMLElement): void {
+export function initPreferences(themeToggle: HTMLInputElement): void {
   const root = document.documentElement
   const stored = read(THEME_KEY)
   const systemDark = matchMedia('(prefers-color-scheme: dark)').matches
@@ -27,16 +26,5 @@ export function initPreferences(themeToggle: HTMLInputElement, largeViewButton: 
     const theme = themeToggle.checked ? 'dark' : 'light'
     root.dataset.theme = theme
     write(THEME_KEY, theme)
-  })
-
-  function applyLargeView(on: boolean): void {
-    root.classList.toggle('large-view', on)
-    largeViewButton.setAttribute('aria-pressed', String(on))
-  }
-  applyLargeView(read(LARGE_VIEW_KEY) === 'true')
-  largeViewButton.addEventListener('click', () => {
-    const on = largeViewButton.getAttribute('aria-pressed') !== 'true'
-    applyLargeView(on)
-    write(LARGE_VIEW_KEY, String(on))
   })
 }

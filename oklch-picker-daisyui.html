@@ -40,7 +40,6 @@
             <h1 class="text-2xl font-bold">OKLCH picker</h1>
             <div class="ml-auto flex items-center gap-4" id="header-controls">
               <label class="flex items-center gap-2 text-sm">Light <input type="checkbox" value="dark" class="toggle theme-controller" aria-label="Dark theme"> Dark</label>
-              <button class="btn btn-sm btn-outline" aria-pressed="false" id="btn-large-view">Large view</button>
             </div>
           </header>
 
@@ -156,7 +155,7 @@
           </footer>
         </main>
       </div>
-      <p class="text-xs opacity-75 mt-2">Header: dark theme toggle (follows the system by default) · Large view (proposal, aria-pressed): bigger text and controls for those who don't use browser zoom</p>
+      <p class="text-xs opacity-75 mt-2">Header: dark theme toggle (follows the system by default) · no separate low-vision mode: browser zoom works (spec 3.11)</p>
     </section>
 
     <div id="states" class="flex flex-col gap-6">
@@ -308,7 +307,6 @@ sses WCAG AA, 4.17:1 (needs 3:1).</pre>
         <p class="text-sm font-semibold">Other</p>
         <p class="font-mono">Brand color, edit, invalid entry, Can’t read this color. Try #E63946</p>
         <p class="font-mono">Dark theme, switch, off</p>
-        <p class="font-mono">Large view, toggle button, not pressed</p>
         <p class="font-mono">CSS copied</p>
         <p class="opacity-75">All images (charts, slider gradients, swatches) are aria-hidden and skipped</p>
       </div></div>
@@ -340,7 +338,7 @@ sses WCAG AA, 4.17:1 (needs 3:1).</pre>
           <tfoot><tr><th>Total</th><th>22</th><th>176</th><th></th></tr></tfoot>
         </table>
         <p class="text-xs opacity-75">1 day = 8 hours · budget and rate not set · to be refined</p>
-        <p class="text-xs opacity-75">Not included: free mode, blind-zone hints, gamut warnings, backlog (spec 10.7, 9) · theme toggle and Large view are open items (spec 8)</p>
+        <p class="text-xs opacity-75">Not included: free mode, blind-zone hints, gamut warnings, backlog (spec 10.7, 9) · theme toggle is an open item (spec 8)</p>
         <p class="text-xs opacity-75">Dates: working version Nov 24 · lesson and public launch Dec 1</p>
       </div></div>
     </section>
@@ -403,10 +401,6 @@ sses WCAG AA, 4.17:1 (needs 3:1).</pre>
         ctx.moveTo(px, 0); ctx.lineTo(px, h);
         ctx.moveTo(0, py); ctx.lineTo(w, py);
         ctx.stroke();
-      });
-
-      document.getElementById('btn-large-view').addEventListener('click', function () {
-        this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
       });
     })();
   </script>

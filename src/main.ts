@@ -18,7 +18,7 @@ function byId<T extends HTMLElement = HTMLElement>(id: string): T {
   return document.getElementById(id) as T
 }
 
-initPreferences(byId<HTMLInputElement>('theme-toggle'), byId('large-view'))
+initPreferences(byId<HTMLInputElement>('theme-toggle'))
 
 const announcer = byId('announcer')
 let pendingAnnouncement: () => string[] = () => []

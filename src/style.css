@@ -3,10 +3,6 @@
   themes: light --default, dark --prefersdark;
 }
 
-html.large-view {
-  font-size: 125%;
-}
-
 .track {
   position: relative;
   height: 1.5rem;

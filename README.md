@@ -16,7 +16,7 @@ Accessibility:
 - Custom `role="slider"`: arrows, PageUp / PageDown, Home / End, hue wraps 359 → 0. While the arrow is held the slider is silent: `aria-valuetext` and the live region update once, ~500 ms after the last change.
 - One polite live region: color first, then WCAG, then APCA on its own line.
 - Charts, gradients and swatches are `aria-hidden`.
-- Light / dark theme from the system with a switch; Large view (root font size 125%); `forced-colors` keep real color samples; `prefers-reduced-motion`; 44px touch targets on touch screens; no horizontal scroll at 320px.
+- Light / dark theme from the system with a switch; no separate low-vision mode — browser zoom works (spec 3.11); `forced-colors` keep real color samples; `prefers-reduced-motion`; 44px touch targets on touch screens; no horizontal scroll at 320px.
 
 ## Deliberately not done
 
