@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>OKLCH picker · Code by Ear · daisyUI</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@5" rel="stylesheet" type="text/css">
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <style>
+    #canvas { position: relative; display: grid; grid-template-columns: repeat(4, max-content); column-gap: 96px; align-items: start; padding: 24px; }
+    #board-desktop { grid-column: 1; grid-row: 1; }
+    #states { grid-column: 2; grid-row: 1; }
+    #board-phone { grid-column: 3; grid-row: 1; }
+    #board-screen-reader { grid-column: 4; grid-row: 1; }
+    #board-estimate { grid-column: 1; grid-row: 2; margin-top: 96px; }
+    .board-title { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; opacity: .75; margin-bottom: 8px; }
+    .track { position: relative; height: 24px; margin: 4px 12px; border-radius: 9999px; background: var(--color-base-300); outline: 1px solid color-mix(in oklab, var(--color-base-content) 30%, transparent); }
+    .track canvas { position: absolute; inset: 0; width: 100%; height: 100%; border-radius: 9999px; }
+    .thumb { position: absolute; top: 50%; width: 24px; height: 24px; margin: -12px 0 0 -12px; border-radius: 9999px; background: var(--color-base-100); border: 3px solid var(--color-base-content); box-shadow: 0 1px 3px rgb(0 0 0 / .3); }
+    .phone .track { margin: 10px 22px; }
+    .phone .thumb { width: 44px; height: 44px; margin: -22px 0 0 -22px; }
+    .chart { display: block; width: 100%; }
+    .brand { background: #E63946; }
+    .brand-hover { background: #D7283A; }
+    .flow { position: absolute; left: 0; top: 0; pointer-events: none; overflow: visible; }
+    .flow path { fill: none; stroke: var(--color-primary); stroke-width: 2; }
+    [data-focus="on"] { outline: 2px solid var(--color-secondary); outline-offset: 1px; }
+  </style>
+</head>
+<body class="bg-base-200 text-base-content">
+  <div id="canvas">
+
+    <section id="board-desktop">
+      <p class="board-title">1 · Desktop · light theme · example #E63946</p>
+      <div class="mockup-browser border border-base-300 bg-base-100 w-[880px]">
+        <div class="mockup-browser-toolbar"><div class="input">OKLCH picker · Code by Ear</div></div>
+        <main class="border-t border-base-300 px-12 py-6 flex flex-col gap-8">
+
+          <header class="flex items-center gap-3">
+            <span class="badge badge-ghost badge-sm font-mono">h1</span>
+            <h1 class="text-2xl font-bold">OKLCH picker</h1>
+            <div class="ml-auto flex items-center gap-4" id="header-controls">
+              <label class="flex items-center gap-2 text-sm">Light <input type="checkbox" value="dark" class="toggle theme-controller" aria-label="Dark theme"> Dark</label>
+              <button class="btn btn-sm btn-outline" aria-pressed="false" id="btn-large-view">Large view</button>
+            </div>
+          </header>
+
+          <section class="flex flex-col gap-3" id="step-1">
+            <h2 class="flex items-center gap-2 text-lg font-semibold"><span class="badge badge-ghost badge-sm font-mono">h2</span>1. Enter color</h2>
+            <fieldset class="fieldset max-w-sm" id="step-1-input">
+              <legend class="fieldset-legend">Brand color</legend>
+              <input class="input font-mono" value="#E63946">
+              <p class="label">#E63946, rgb(), hsl() or oklch()</p>
+            </fieldset>
+          </section>
+
+          <section class="flex flex-col gap-4" id="step-2">
+            <h2 class="flex items-center gap-2 text-lg font-semibold"><span class="badge badge-ghost badge-sm font-mono">h2</span>2. Color description</h2>
+            <div class="flex items-center gap-4">
+              <div class="brand rounded-box w-40 h-18"></div>
+              <div>
+                <p class="text-xl font-semibold">Vivid warm red, 61%</p>
+                <p class="text-sm opacity-75 font-mono">oklch(61.2% 0.208 22.2)</p>
+              </div>
+            </div>
+            <div class="grid grid-cols-3 gap-4" id="panels">
+              <div class="card card-border bg-base-100" id="panel-l"><div class="card-body p-4 gap-2">
+                <div class="flex justify-between"><span class="font-semibold">Lightness</span><span>61%</span></div>
+                <canvas class="chart rounded-box" data-x="l" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track"><canvas data-x="l" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:61.2%"></div></div>
+                <p class="text-xs opacity-75">left — darker, right — lighter</p>
+              </div></div>
+              <div class="card card-border bg-base-100" id="panel-c"><div class="card-body p-4 gap-2">
+                <div class="flex justify-between"><span class="font-semibold">Chroma</span><span>vivid</span></div>
+                <canvas class="chart rounded-box" data-x="h" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track"><canvas data-x="c" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:56%"></div></div>
+                <p class="text-xs opacity-75">left — greyer, right — more vivid</p>
+              </div></div>
+              <div class="card card-border bg-base-100" id="panel-h"><div class="card-body p-4 gap-2">
+                <div class="flex justify-between"><span class="font-semibold">Hue</span><span>red, 22°</span></div>
+                <canvas class="chart rounded-box" data-x="h" data-y="l" width="240" height="140" aria-hidden="true"></canvas>
+                <div class="track"><canvas data-x="h" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:6.2%"></div></div>
+                <p class="text-xs opacity-75">left — more pink, right — more orange</p>
+              </div></div>
+            </div>
+            <p class="text-xs opacity-75">Charts: slices from oklch-picker (view/chart), sRGB only here · all images: aria-hidden, not focusable · mouse click picks a color · same as the sliders</p>
+          </section>
+
+          <section class="flex flex-col gap-4" id="step-3">
+            <h2 class="flex items-center gap-2 text-lg font-semibold"><span class="badge badge-ghost badge-sm font-mono">h2</span>3. Text color</h2>
+            <div class="grid grid-cols-[1fr_1.4fr_auto] gap-4 items-start" id="step-3-choice">
+              <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-4">
+                <legend class="fieldset-legend">Text color</legend>
+                <label class="flex items-center gap-2 py-1"><input type="radio" name="d-color" class="radio radio-sm radio-primary" checked> White</label>
+                <label class="flex items-center gap-2 py-1"><input type="radio" name="d-color" class="radio radio-sm radio-primary"> Black</label>
+              </fieldset>
+              <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-4">
+                <legend class="fieldset-legend">Text size</legend>
+                <label class="label" for="d-size">Font size</label>
+                <div class="flex items-center gap-2"><input id="d-size" type="number" class="input input-sm w-20 text-right" value="19"> px <span class="text-xs opacity-75">1.1875rem</span></div>
+                <label class="label" for="d-weight">Font weight</label>
+                <select id="d-weight" class="select select-sm w-40"><option>700 · Bold</option></select>
+                <p class="label">Any size · weight 100–900</p>
+              </fieldset>
+              <button class="btn btn-outline" id="btn-recommend">Show recommendation</button>
+            </div>
+            <div class="flex items-center gap-4">
+              <div class="brand rounded-field px-5 py-2.5 text-white text-[19px] font-bold">Button</div>
+              <div class="flex flex-col gap-1">
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></p>
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>Reads well. <span class="text-xs opacity-75">APCA Lc 73</span></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="flex flex-col gap-4" id="step-4">
+            <h2 class="flex items-center gap-2 text-lg font-semibold"><span class="badge badge-ghost badge-sm font-mono">h2</span>4. Hover</h2>
+            <div class="max-w-sm flex flex-col gap-1" id="slider-hover">
+              <div class="flex justify-between"><span>Hover shift</span><span>4% darker</span></div>
+              <input type="range" class="range range-sm range-primary" min="0" max="10" value="4" aria-label="Hover shift">
+              <p class="text-xs opacity-75">Darker, because the text is white · black text → lighter</p>
+            </div>
+            <div class="grid grid-cols-2 gap-6">
+              <div class="flex flex-col gap-2">
+                <p class="text-xs opacity-75">Normal · #E63946</p>
+                <div class="brand rounded-field px-5 py-2.5 text-white text-[19px] font-bold text-center">Button</div>
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></p>
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>Reads well. <span class="text-xs opacity-75">APCA Lc 73</span></p>
+              </div>
+              <div class="flex flex-col gap-2" id="hover-sample">
+                <p class="text-xs opacity-75">Hover · #D7283A</p>
+                <div class="brand-hover rounded-field px-5 py-2.5 text-white text-[19px] font-bold text-center">Button</div>
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span><b>Passes WCAG AA, 4.94:1 (needs 4.5:1).</b></p>
+                <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>Reads well. <span class="text-xs opacity-75">APCA Lc 78</span></p>
+              </div>
+            </div>
+          </section>
+
+          <section class="flex flex-col gap-4" id="step-5">
+            <h2 class="flex items-center gap-2 text-lg font-semibold"><span class="badge badge-ghost badge-sm font-mono">h2</span>5. Result CSS</h2>
+<pre class="bg-base-200 border border-base-300 rounded-box p-4 text-xs leading-relaxed whitespace-pre-wrap" id="css-code"><code>--brand: oklch(61.2% 0.208 22.2);                            /* #E63946, given */
+
+/* picked by the tool */
+--brand-hover: #D7283A;
+--brand-hover: oklch(from var(--brand) calc(l - 0.04) c h);
+--brand-text: #fff;                                          /* same on hover */
+--brand-text-size: 1.1875rem;                                /* 19px, minimum for contrast */
+--brand-text-weight: 700;</code></pre>
+            <div><button class="btn btn-primary" id="btn-copy">Copy Result CSS</button></div>
+          </section>
+
+          <footer class="border-t border-base-300 pt-4 flex flex-col gap-1 text-sm" id="footer">
+            <p class="font-semibold">Made by Code by Ear</p>
+            <p class="opacity-75">Short story: built for the school's blind and low-vision students</p>
+            <a class="link link-primary w-fit" id="link-waitlist">Join the waitlist for the next course</a>
+            <p class="text-xs opacity-75">codebyear.school/waitlist?utm_source=oklch-picker · Built on oklch-picker by Evil Martians</p>
+          </footer>
+        </main>
+      </div>
+      <p class="text-xs opacity-75 mt-2">Header: dark theme toggle (follows the system by default) · Large view (proposal, aria-pressed): bigger text and controls for those who don't use browser zoom</p>
+    </section>
+
+    <div id="states" class="flex flex-col gap-6">
+      <section class="w-80" id="state-input-error">
+        <p class="board-title">1a · Step 1 · input error</p>
+        <div class="card bg-base-100 card-border"><div class="card-body p-4">
+          <fieldset class="fieldset">
+            <legend class="fieldset-legend">Brand color</legend>
+            <input class="input input-error font-mono" value="#E6394" aria-invalid="true">
+            <p class="flex items-center gap-2"><span class="badge badge-error badge-sm" aria-hidden="true">✗</span>Can’t read this color. Try #E63946</p>
+            <p class="label">Error linked to the field via aria-describedby</p>
+          </fieldset>
+        </div></div>
+      </section>
+
+      <section class="w-80" id="state-white-regular">
+        <p class="board-title">3a · Step 3 · White, 16px, 600</p>
+        <div class="card bg-base-100 card-border"><div class="card-body p-4 gap-2">
+          <div class="brand rounded-field px-5 py-2.5 text-white text-base font-semibold text-center">Button</div>
+          <p class="flex items-start gap-2"><span class="badge badge-error badge-sm mt-0.5" aria-hidden="true">✗</span><span><b>Fails WCAG AA, 4.17:1 (needs 4.5:1).</b> Try large bold text.</span></p>
+          <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>Reads well. <span class="text-xs opacity-75">APCA Lc 73</span></p>
+        </div></div>
+      </section>
+
+      <section class="w-80" id="state-black-regular">
+        <p class="board-title">3b · Step 3 · Black, 16px, 600</p>
+        <div class="card bg-base-100 card-border"><div class="card-body p-4 gap-2">
+          <div class="brand rounded-field px-5 py-2.5 text-black text-base font-semibold text-center">Button</div>
+          <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span><b>Passes WCAG AA, 5.04:1 (needs 4.5:1).</b></p>
+          <p class="flex items-center gap-2"><span class="badge badge-error badge-sm" aria-hidden="true">✗</span>Hard to read. <span class="text-xs opacity-75">APCA Lc 37</span></p>
+          <p class="text-xs opacity-75">WCAG passes, APCA says no — the case the lesson is about</p>
+        </div></div>
+      </section>
+
+      <section class="w-80" id="state-recommendation">
+        <p class="board-title">3c · Step 3 · after Show recommendation</p>
+        <div class="card bg-base-100 card-border"><div class="card-body p-4 gap-3">
+          <div class="flex gap-6 text-sm">
+            <div><p class="font-semibold">Text color</p><label class="flex items-center gap-2 py-1"><input type="radio" name="r-color" class="radio radio-sm radio-primary" checked> White</label><label class="flex items-center gap-2 py-1"><input type="radio" name="r-color" class="radio radio-sm radio-primary"> Black</label></div>
+            <div><p class="font-semibold">Text size</p><p class="py-1">19 px</p><p class="py-1">700 · Bold</p></div>
+          </div>
+          <div role="status" class="alert alert-info alert-soft flex-col items-start gap-1">
+            <p class="font-semibold">Recommended: white, 19px, bold (700)</p>
+            <p class="text-sm">Mid-lightness background: only large text reaches the contrast.</p>
+          </div>
+          <p class="text-xs opacity-75">The button sets text color, font size and font weight; the verdict updates</p>
+        </div></div>
+      </section>
+
+      <section class="w-80" id="state-copied">
+        <p class="board-title">5a · Step 5 · after Copy Result CSS</p>
+        <div class="card bg-base-100 card-border"><div class="card-body p-4 gap-2">
+          <div class="flex items-center gap-3"><button class="btn btn-primary">Copy Result CSS</button><span class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>CSS copied</span></div>
+          <p class="text-xs opacity-75">Also said via the live region</p>
+        </div></div>
+      </section>
+    </div>
+
+    <section class="phone w-80" id="board-phone">
+      <p class="board-title">2 · iPhone · dark theme · same as 400% zoom</p>
+      <div data-theme="dark" class="bg-base-100 text-base-content border-4 border-neutral rounded-[2rem] overflow-hidden">
+        <main class="px-3 py-5 flex flex-col gap-6">
+          <header class="flex items-center gap-2">
+            <h1 class="text-xl font-bold">OKLCH picker</h1>
+            <input type="checkbox" class="toggle ml-auto" checked aria-label="Dark theme">
+          </header>
+          <section class="flex flex-col gap-2">
+            <h2 class="text-lg font-semibold">1. Enter color</h2>
+            <fieldset class="fieldset">
+              <legend class="fieldset-legend">Brand color</legend>
+              <input class="input input-lg w-full font-mono" value="#E63946">
+              <p class="label">#E63946, rgb(), hsl() or oklch()</p>
+            </fieldset>
+          </section>
+          <section class="flex flex-col gap-3" id="phone-step-2">
+            <h2 class="text-lg font-semibold">2. Color description</h2>
+            <div class="brand rounded-box h-16"></div>
+            <p class="text-xl font-semibold">Vivid warm red, 61%</p>
+            <div class="card card-border"><div class="card-body p-3 gap-2">
+              <div class="flex justify-between"><span class="font-semibold">Lightness</span><span>61%</span></div>
+              <canvas class="chart rounded-box" data-x="l" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track"><canvas data-x="l" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:61.2%"></div></div>
+              <p class="text-xs opacity-75">left — darker, right — lighter</p>
+            </div></div>
+            <div class="card card-border"><div class="card-body p-3 gap-2">
+              <div class="flex justify-between"><span class="font-semibold">Chroma</span><span>vivid</span></div>
+              <canvas class="chart rounded-box" data-x="h" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track"><canvas data-x="c" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:56%"></div></div>
+              <p class="text-xs opacity-75">left — greyer, right — more vivid</p>
+            </div></div>
+            <div class="card card-border"><div class="card-body p-3 gap-2">
+              <div class="flex justify-between"><span class="font-semibold">Hue</span><span>red, 22°</span></div>
+              <canvas class="chart rounded-box" data-x="h" data-y="l" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track"><canvas data-x="h" width="240" height="1" aria-hidden="true"></canvas><div class="thumb" style="left:6.2%"></div></div>
+              <p class="text-xs opacity-75">left — more pink, right — more orange</p>
+            </div></div>
+          </section>
+          <section class="flex flex-col gap-3">
+            <h2 class="text-lg font-semibold">3. Text color</h2>
+            <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-3">
+              <legend class="fieldset-legend">Text color</legend>
+              <label class="flex items-center gap-3 min-h-11"><input type="radio" name="p-color" class="radio radio-primary" checked> White</label>
+              <label class="flex items-center gap-3 min-h-11"><input type="radio" name="p-color" class="radio radio-primary"> Black</label>
+            </fieldset>
+            <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-3">
+              <legend class="fieldset-legend">Text size</legend>
+              <label class="label" for="p-size">Font size</label>
+              <div class="flex items-center gap-2"><input id="p-size" type="number" class="input w-24 text-right" value="19"> px</div>
+              <label class="label" for="p-weight">Font weight</label>
+              <select id="p-weight" class="select w-full"><option>700 · Bold</option></select>
+            </fieldset>
+            <button class="btn btn-outline btn-block">Show recommendation</button>
+            <div class="brand rounded-field px-5 py-2.5 text-white text-[19px] font-bold text-center">Button</div>
+            <p class="flex items-start gap-2"><span class="badge badge-success badge-sm mt-0.5" aria-hidden="true">✓</span><b>Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</b></p>
+            <p class="flex items-center gap-2"><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>Reads well.</p>
+          </section>
+          <p class="text-xs opacity-75 border border-dashed border-base-300 rounded-box p-2">Steps 4–5 and the footer: same blocks, one column · no horizontal scroll · touch targets 44px</p>
+        </main>
+      </div>
+    </section>
+
+    <section class="w-[360px] flex flex-col gap-3" id="board-screen-reader">
+      <p class="board-title">3 · Screen reader · what NVDA says</p>
+      <div class="card bg-base-100 card-border" id="sr-headings"><div class="card-body p-4 gap-1 font-mono text-xs">
+        <p class="font-sans text-sm font-semibold">Headings (H key)</p>
+        <p>h1 OKLCH picker</p><p>h2 1. Enter color</p><p>h2 2. Color description</p><p>h2 3. Text color</p><p>h2 4. Hover</p><p>h2 5. Result CSS</p>
+      </div></div>
+      <div class="card bg-base-100 card-border" id="sr-sliders"><div class="card-body p-4 gap-1 text-xs">
+        <p class="text-sm font-semibold">Sliders · custom, role="slider"</p>
+        <p class="font-mono">Lightness, slider, 61% lightness</p>
+        <p class="font-mono">Chroma, slider, vivid</p>
+        <p class="font-mono">Hue, slider, red, 22 degrees</p>
+        <p class="opacity-75">Not native range: NVDA reads a native range on every arrow step. Custom slider stays silent while the arrow is held</p>
+        <p class="opacity-75">Hue wraps 360 → 0 with the arrows</p>
+      </div></div>
+      <div class="card bg-base-100 card-border" id="sr-live"><div class="card-body p-4 gap-1 text-xs">
+        <p class="text-sm font-semibold">Live region · polite</p>
+        <p class="opacity-75">Arrow held → silent. ~500 ms after the last change, once:</p>
+        <p class="font-mono">Vivid warm red, 61%. Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).</p>
+        <p class="font-mono">Reads well according to APCA.</p>
+      </div></div>
+      <div class="card bg-base-100 card-border" id="sr-braille"><div class="card-body p-4 gap-1 text-xs">
+        <p class="text-sm font-semibold">Braille display · 40 cells</p>
+        <pre class="font-mono bg-base-200 rounded-field p-2">Vivid warm red, 61%. Large text only. Pa
+sses WCAG AA, 4.17:1 (needs 3:1).</pre>
+        <p class="opacity-75">The first line carries the color and the limit</p>
+      </div></div>
+      <div class="card bg-base-100 card-border" id="sr-other"><div class="card-body p-4 gap-1 text-xs">
+        <p class="text-sm font-semibold">Other</p>
+        <p class="font-mono">Brand color, edit, invalid entry, Can’t read this color. Try #E63946</p>
+        <p class="font-mono">Dark theme, switch, off</p>
+        <p class="font-mono">Large view, toggle button, not pressed</p>
+        <p class="font-mono">CSS copied</p>
+        <p class="opacity-75">All images (charts, slider gradients, swatches) are aria-hidden and skipped</p>
+      </div></div>
+    </section>
+
+    <section class="w-[880px]" id="board-estimate">
+      <p class="board-title">Estimate · draft</p>
+      <div class="card bg-base-100 card-border"><div class="card-body p-4">
+        <table class="table table-sm">
+          <thead><tr><th>Task</th><th>Days</th><th>Hours</th><th>Notes</th></tr></thead>
+          <tbody>
+            <tr class="bg-base-200"><th colspan="4">Design</th></tr>
+            <tr><td>Visual style for the public launch</td><td>1.5</td><td>12</td><td class="opacity-75">Own Code by Ear look, not oklch.com · light / dark, high contrast</td></tr>
+            <tr class="bg-base-200"><th colspan="4">Development</th></tr>
+            <tr><td>Project setup</td><td>0.5</td><td>4</td><td class="opacity-75">Static site</td></tr>
+            <tr><td>Port from oklch-picker</td><td>1.5</td><td>12</td><td class="opacity-75">Color parsing, chart, range tracks, sample, code · MIT notices</td></tr>
+            <tr><td>Step 1 · Enter color</td><td>0.5</td><td>4</td><td class="opacity-75">HEX, rgb(), hsl(), oklch(), error text</td></tr>
+            <tr><td>Step 2 · Color description</td><td>2</td><td>16</td><td class="opacity-75">Color words, three L / C / H panels: chart, gradient slider, hint</td></tr>
+            <tr><td>Custom sliders and announcements</td><td>2</td><td>16</td><td class="opacity-75">role="slider" with keyboard, touch and aria-valuetext · debounced live region</td></tr>
+            <tr><td>Contrast and recommendation</td><td>1.5</td><td>12</td><td class="opacity-75">WCAG 2 + APCA, verdict texts, unit tests on the 6 test colors</td></tr>
+            <tr><td>Step 3 · Text color</td><td>1</td><td>8</td><td class="opacity-75">Radio group, font size and weight, verdict, Show recommendation</td></tr>
+            <tr><td>Steps 4–5 · Hover, Result CSS</td><td>1</td><td>8</td><td class="opacity-75">Hover shift slider, both verdicts, Copy Result CSS</td></tr>
+            <tr><td>System settings and layout</td><td>1.5</td><td>12</td><td class="opacity-75">Zoom 400%, mobile, forced-colors, reduced motion, rem</td></tr>
+            <tr><td>Footer and deploy</td><td>0.5</td><td>4</td><td class="opacity-75">School story, waitlist link with UTM, hosting</td></tr>
+            <tr><td>Testing</td><td>2</td><td>16</td><td class="opacity-75">NVDA + Firefox, VoiceOver on Mac and iPhone, axe</td></tr>
+            <tr><td>Review, fixes and communication</td><td>3</td><td>24</td><td class="opacity-75">Student tests, Andrey's check Nov 24–30, fixes after the lesson</td></tr>
+            <tr><td>Buffer 20%</td><td>3.5</td><td>28</td><td></td></tr>
+          </tbody>
+          <tfoot><tr><th>Total</th><th>22</th><th>176</th><th></th></tr></tfoot>
+        </table>
+        <p class="text-xs opacity-75">1 day = 8 hours · budget and rate not set · to be refined</p>
+        <p class="text-xs opacity-75">Not included: free mode, blind-zone hints, gamut warnings, backlog (spec 10.7, 9) · theme toggle and Large view are open items (spec 8)</p>
+        <p class="text-xs opacity-75">Dates: working version Nov 24 · lesson and public launch Dec 1</p>
+      </div></div>
+    </section>
+
+    <svg class="flow" id="flow">
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+          <path d="M0 0 L10 5 L0 10 z" style="fill: var(--color-primary); stroke: none"></path>
+        </marker>
+      </defs>
+    </svg>
+
+  </div>
+  <script src="wireframe-kit.js"></script>
+  <script>
+    (function () {
+      var current = { l: 0.612, c: 0.208, h: 22.2 };
+      var range = { l: 1, c: 0.37, h: 360 };
+
+      function toSrgb(L, C, h) {
+        var a = C * Math.cos(h * Math.PI / 180), b = C * Math.sin(h * Math.PI / 180);
+        var l = Math.pow(L + 0.3963377774 * a + 0.2158037573 * b, 3);
+        var m = Math.pow(L - 0.1055613458 * a - 0.0638541728 * b, 3);
+        var s = Math.pow(L - 0.0894841775 * a - 1.2914855480 * b, 3);
+        return [
+          4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+          -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+          -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s
+        ];
+      }
+
+      function encode(v) {
+        return Math.round(255 * (v <= 0.0031308 ? 12.92 * v : 1.055 * Math.pow(v, 1 / 2.4) - 0.055));
+      }
+
+      document.querySelectorAll('canvas[data-x]').forEach(function (cv) {
+        var x = cv.dataset.x, y = cv.dataset.y, w = cv.width, h = cv.height;
+        var ctx = cv.getContext('2d'), img = ctx.createImageData(w, h);
+        for (var j = 0; j < h; j++) {
+          for (var i = 0; i < w; i++) {
+            var v = { l: current.l, c: current.c, h: current.h };
+            v[x] = i / (w - 1) * range[x];
+            if (y) v[y] = (1 - j / (h - 1)) * range[y];
+            var rgb = toSrgb(v.l, v.c, v.h);
+            var inGamut = rgb.every(function (n) { return n >= -1e-4 && n <= 1 + 1e-4; });
+            if (!inGamut && y) continue;
+            var k = (j * w + i) * 4;
+            img.data[k] = encode(Math.min(1, Math.max(0, rgb[0])));
+            img.data[k + 1] = encode(Math.min(1, Math.max(0, rgb[1])));
+            img.data[k + 2] = encode(Math.min(1, Math.max(0, rgb[2])));
+            img.data[k + 3] = inGamut ? 255 : 90;
+          }
+        }
+        ctx.putImageData(img, 0, 0);
+        if (!y) return;
+        ctx.strokeStyle = 'rgba(128,128,128,.7)';
+        ctx.beginPath();
+        var px = Math.round(current[x] / range[x] * (w - 1)) + 0.5;
+        var py = Math.round((1 - current[y] / range[y]) * (h - 1)) + 0.5;
+        ctx.moveTo(px, 0); ctx.lineTo(px, h);
+        ctx.moveTo(0, py); ctx.lineTo(w, py);
+        ctx.stroke();
+      });
+
+      document.getElementById('btn-large-view').addEventListener('click', function () {
+        this.setAttribute('aria-pressed', this.getAttribute('aria-pressed') === 'true' ? 'false' : 'true');
+      });
+    })();
+  </script>
+  <script>
+    (function () {
+      var canvas = document.getElementById('canvas');
+      var svg = document.getElementById('flow');
+      var NS = 'http://www.w3.org/2000/svg';
+      var links = [
+        { from: 'step-1-input', to: 'state-input-error' },
+        { from: 'step-3-choice', to: 'state-white-regular' },
+        { from: 'step-3-choice', to: 'state-black-regular' },
+        { from: 'btn-recommend', to: 'state-recommendation' },
+        { from: 'btn-copy', to: 'state-copied' }
+      ];
+
+      function box(id) {
+        var r = document.getElementById(id).getBoundingClientRect();
+        var c = canvas.getBoundingClientRect();
+        return { l: r.left - c.left, t: r.top - c.top, w: r.width, h: r.height };
+      }
+
+      function draw() {
+        svg.querySelectorAll('.link').forEach(function (n) { n.remove(); });
+        svg.setAttribute('width', canvas.scrollWidth);
+        svg.setAttribute('height', canvas.scrollHeight);
+        var desk = box('board-desktop');
+        links.forEach(function (k) {
+          var a = box(k.from), b = box(k.to);
+          var x1 = desk.l + desk.w, y1 = a.t + a.h / 2;
+          var x2 = b.l, y2 = b.t + 24;
+          var d = (x2 - x1) / 2;
+          var p = document.createElementNS(NS, 'path');
+          p.setAttribute('class', 'link');
+          p.setAttribute('d', 'M' + x1 + ' ' + y1 + ' C' + (x1 + d) + ' ' + y1 + ' ' + (x2 - d) + ' ' + y2 + ' ' + x2 + ' ' + y2);
+          p.setAttribute('marker-end', 'url(#arrow)');
+          svg.appendChild(p);
+        });
+      }
+
+      window.addEventListener('load', function () { setTimeout(draw, 300); });
+      window.addEventListener('resize', draw);
+    })();
+  </script>
+</body>
+</html>
