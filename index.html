@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Color by Ear</title>
+    <meta name="description" content="Accessible text and hover colors for your brand color. Built on OKLCH, made for screen readers." />
+  </head>
+  <body class="bg-base-100 text-base-content">
+
+    <header class="max-w-5xl mx-auto px-4 pt-6 flex flex-wrap items-center gap-4">
+      <h1 class="text-2xl font-bold">Color by Ear <span class="block text-base font-normal opacity-80">Accessible text and hover colors for your brand color. Built on OKLCH, made for screen readers.</span></h1>
+      <div class="ml-auto flex flex-wrap items-center gap-4">
+        <label class="flex items-center gap-2 min-h-11 cursor-pointer">
+          <input type="checkbox" role="switch" class="toggle" id="theme-toggle">
+          Dark theme
+        </label>
+        <button type="button" class="btn btn-outline" aria-pressed="false" id="large-view">Large view</button>
+      </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-6 flex flex-col gap-10">
+
+      <section aria-labelledby="step-1-title" class="flex flex-col gap-3">
+        <h2 id="step-1-title" class="text-xl font-semibold">1. Brand color</h2>
+        <fieldset class="fieldset">
+          <legend class="fieldset-legend">Do you have a color?</legend>
+          <label class="flex items-center gap-2 min-h-11 cursor-pointer"><input type="radio" name="source" value="given" class="radio radio-primary" checked> I have a brand color</label>
+          <label class="flex items-center gap-2 min-h-11 cursor-pointer"><input type="radio" name="source" value="pick" class="radio radio-primary"> Pick a color</label>
+        </fieldset>
+        <form id="brand-field" class="flex flex-col gap-1 max-w-sm">
+          <label for="brand-input" class="font-medium">Brand color</label>
+          <input id="brand-input" class="input validator w-full font-mono" placeholder="for example, #E63946" required autocomplete="off" spellcheck="false" aria-describedby="brand-hint">
+          <p id="brand-hint" class="text-sm opacity-80">Supported formats: HEX, RGB, HSL, OKLCH</p>
+        </form>
+        <div id="color-view" class="flex flex-col gap-4">
+        <div id="color-summary" class="flex flex-wrap items-center gap-4" aria-hidden="true">
+          <div id="swatch" class="swatch rounded-box w-40 h-18"></div>
+          <div>
+            <p id="description" class="text-xl font-semibold"></p>
+            <p id="oklch-text" class="text-sm opacity-80 font-mono"></p>
+          </div>
+        </div>
+        <div id="panels" class="grid gap-4 md:grid-cols-3">
+          <div class="card card-border">
+            <div class="card-body p-4 gap-2">
+              <p class="flex justify-between"><span id="l-label" class="font-semibold">Lightness</span><span id="l-value" aria-hidden="true"></span></p>
+              <canvas class="chart rounded-box" data-x="l" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track" id="l-track">
+                <canvas data-x="l" width="240" height="1" aria-hidden="true"></canvas>
+                <div class="thumb" id="l-slider" role="slider" tabindex="0" aria-labelledby="l-label" aria-describedby="l-hint"></div>
+              </div>
+              <p id="l-hint" class="text-sm opacity-80"></p>
+            </div>
+          </div>
+          <div class="card card-border">
+            <div class="card-body p-4 gap-2">
+              <p class="flex justify-between"><span id="c-label" class="font-semibold">Chroma</span><span id="c-value" aria-hidden="true"></span></p>
+              <canvas class="chart rounded-box" data-x="h" data-y="c" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track" id="c-track">
+                <canvas data-x="c" width="240" height="1" aria-hidden="true"></canvas>
+                <div class="thumb" id="c-slider" role="slider" tabindex="0" aria-labelledby="c-label" aria-describedby="c-hint"></div>
+              </div>
+              <p id="c-hint" class="text-sm opacity-80"></p>
+            </div>
+          </div>
+          <div class="card card-border">
+            <div class="card-body p-4 gap-2">
+              <p class="flex justify-between"><span id="h-label" class="font-semibold">Hue</span><span id="h-value" aria-hidden="true"></span></p>
+              <canvas class="chart rounded-box" data-x="h" data-y="l" width="240" height="140" aria-hidden="true"></canvas>
+              <div class="track" id="h-track">
+                <canvas data-x="h" width="240" height="1" aria-hidden="true"></canvas>
+                <div class="thumb" id="h-slider" role="slider" tabindex="0" aria-labelledby="h-label" aria-describedby="h-hint"></div>
+              </div>
+              <p id="h-hint" class="text-sm opacity-80"></p>
+            </div>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="step-2-title" class="flex flex-col gap-4">
+        <h2 id="step-2-title" class="text-xl font-semibold">2. Text color</h2>
+        <p class="needs-color-note" hidden>Enter your brand color in step 1 first.</p>
+        <div class="step-body flex flex-col gap-4">
+        <div class="grid gap-4 md:grid-cols-[1fr_1.4fr_auto] items-start">
+          <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-4">
+            <legend class="fieldset-legend">Text color</legend>
+            <label class="flex items-center gap-2 min-h-11 cursor-pointer"><input type="radio" name="text-color" value="white" class="radio radio-primary" checked> White</label>
+            <label class="flex items-center gap-2 min-h-11 cursor-pointer"><input type="radio" name="text-color" value="black" class="radio radio-primary"> Black</label>
+          </fieldset>
+          <fieldset class="fieldset bg-base-200 border border-base-300 rounded-box p-4">
+            <legend class="fieldset-legend">Text size</legend>
+            <label for="font-size" class="text-sm">Font size, px</label>
+            <div class="flex items-center gap-2"><input id="font-size" type="number" class="input w-24 text-right" min="8" max="96" step="1" value="16"><span id="font-size-rem" class="text-sm opacity-80"></span></div>
+            <label for="font-weight" class="text-sm">Font weight</label>
+            <select id="font-weight" class="select w-48">
+              <option value="100">100 · Thin</option>
+              <option value="200">200 · Extra Light</option>
+              <option value="300">300 · Light</option>
+              <option value="400" selected>400 · Regular</option>
+              <option value="500">500 · Medium</option>
+              <option value="600">600 · Semibold</option>
+              <option value="700">700 · Bold</option>
+              <option value="800">800 · Extra Bold</option>
+              <option value="900">900 · Black</option>
+            </select>
+          </fieldset>
+          <button type="button" class="btn btn-outline" id="recommend">Show recommendation</button>
+        </div>
+        <div id="recommendation" class="rounded-box border border-base-300 bg-base-200 p-4 flex flex-col gap-1" hidden>
+          <p id="recommendation-title" class="font-semibold"></p>
+          <p id="recommendation-text" class="text-sm"></p>
+        </div>
+        <div class="flex flex-wrap items-center gap-4">
+          <div id="sample" class="swatch rounded-field px-5 py-2.5" aria-hidden="true">Button</div>
+          <div class="flex flex-col gap-1">
+            <p class="flex items-start gap-2"><span id="wcag-icon" class="badge badge-sm mt-0.5" aria-hidden="true"></span><span id="wcag-text" class="font-semibold"></span></p>
+            <p class="flex items-center gap-2"><span id="apca-icon" class="badge badge-sm" aria-hidden="true"></span><span id="apca-text"></span><span id="apca-lc" class="text-sm opacity-80"></span></p>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="step-3-title" class="flex flex-col gap-4">
+        <h2 id="step-3-title" class="text-xl font-semibold">3. Hover</h2>
+        <p class="needs-color-note" hidden>Enter your brand color in step 1 first.</p>
+        <div class="step-body flex flex-col gap-4">
+        <div class="max-w-sm flex flex-col gap-1">
+          <p class="flex justify-between"><span id="shift-label">Hover shift</span><span id="shift-value" aria-hidden="true"></span></p>
+          <div class="track" id="shift-track">
+            <div class="thumb" id="shift-slider" role="slider" tabindex="0" aria-labelledby="shift-label" aria-describedby="shift-hint"></div>
+          </div>
+          <p id="shift-hint" class="text-sm opacity-80"></p>
+        </div>
+        <div class="grid gap-6 md:grid-cols-2">
+          <div class="flex flex-col gap-2">
+            <p class="text-sm opacity-80">Normal · <span id="normal-hex"></span></p>
+            <div id="normal-sample" class="swatch rounded-field px-5 py-2.5 text-center" aria-hidden="true">Button</div>
+            <p class="flex items-start gap-2"><span id="normal-wcag-icon" class="badge badge-sm mt-0.5" aria-hidden="true"></span><span id="normal-wcag-text" class="font-semibold"></span></p>
+            <p class="flex items-center gap-2"><span id="normal-apca-icon" class="badge badge-sm" aria-hidden="true"></span><span id="normal-apca-text"></span><span id="normal-apca-lc" class="text-sm opacity-80"></span></p>
+          </div>
+          <div class="flex flex-col gap-2">
+            <p class="text-sm opacity-80">Hover · <span id="hover-hex"></span></p>
+            <div id="hover-sample" class="swatch rounded-field px-5 py-2.5 text-center" aria-hidden="true">Button</div>
+            <p class="flex items-start gap-2"><span id="hover-wcag-icon" class="badge badge-sm mt-0.5" aria-hidden="true"></span><span id="hover-wcag-text" class="font-semibold"></span></p>
+            <p class="flex items-center gap-2"><span id="hover-apca-icon" class="badge badge-sm" aria-hidden="true"></span><span id="hover-apca-text"></span><span id="hover-apca-lc" class="text-sm opacity-80"></span></p>
+          </div>
+        </div>
+        </div>
+      </section>
+
+      <section aria-labelledby="step-4-title" class="flex flex-col gap-4">
+        <h2 id="step-4-title" class="text-xl font-semibold">4. Result CSS</h2>
+        <p class="needs-color-note" hidden>Enter your brand color in step 1 first.</p>
+        <div class="step-body flex flex-col gap-4">
+        <pre class="bg-base-200 border border-base-300 rounded-box p-4 text-sm leading-relaxed whitespace-pre-wrap break-words"><code id="css-code"></code></pre>
+        <div class="flex flex-wrap items-center gap-3">
+          <button type="button" class="btn btn-primary" id="copy">Copy Result CSS</button>
+          <p id="copy-status" class="flex items-center gap-2" hidden><span class="badge badge-success badge-sm" aria-hidden="true">✓</span>CSS copied</p>
+        </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="max-w-5xl mx-auto px-4 py-6 border-t border-base-300 flex flex-col gap-1 text-sm">
+      <p class="font-semibold">Made by Code by Ear</p>
+      <p>Built for the school's blind and low-vision students, who learn front-end development by ear.</p>
+      <p><a class="link" href="https://codebyear.school/waitlist?utm_source=oklch-picker&amp;utm_medium=footer">Join the waitlist for the next course</a></p>
+      <p class="opacity-80">Charts inspired by <a class="link" href="https://oklch.com">oklch.com</a> by Evil Martians</p>
+    </footer>
+
+    <div id="announcer" class="sr-only" aria-live="polite"></div>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

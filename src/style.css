@@ -1,0 +1,70 @@
+@import "tailwindcss";
+@plugin "daisyui" {
+  themes: light --default, dark --prefersdark;
+}
+
+html.large-view {
+  font-size: 125%;
+}
+
+.track {
+  position: relative;
+  height: 1.5rem;
+  margin: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  background: var(--color-base-300);
+  outline: 1px solid color-mix(in oklab, var(--color-base-content) 30%, transparent);
+  touch-action: none;
+  cursor: pointer;
+}
+
+.track canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+}
+
+.thumb {
+  position: absolute;
+  top: 50%;
+  width: 1.75rem;
+  height: 1.75rem;
+  translate: -50% -50%;
+  border-radius: 9999px;
+  background: var(--color-base-100);
+  border: 3px solid var(--color-base-content);
+  box-shadow: 0 1px 3px rgb(0 0 0 / 0.3);
+}
+
+.thumb:focus-visible {
+  outline: 3px solid var(--color-primary);
+  outline-offset: 3px;
+}
+
+@media (pointer: coarse) {
+  .thumb {
+    width: 2.75rem;
+    height: 2.75rem;
+  }
+}
+
+.chart {
+  display: block;
+  width: 100%;
+}
+
+canvas,
+.swatch {
+  forced-color-adjust: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
