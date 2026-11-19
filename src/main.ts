@@ -123,7 +123,7 @@ const sliders = {
 const shiftValueText = (value: number): string => `${Math.round(value * 100)}% ${hoverDirection($textColor.get())}`
 
 const shiftSlider = createSlider({
-  thumb: byId('shift-slider'), track: byId('shift-track'), min: 0, max: 0.1, step: 0.01, bigStep: 0.05,
+  thumb: byId('shift-slider'), track: byId('shift-track'), min: 0, max: 0.2, step: 0.01, bigStep: 0.05,
   valueText: shiftValueText,
   onInput: value => $shift.set(value),
   onSettle: () => announceNow(hoverSummary()),

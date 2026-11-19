@@ -328,7 +328,7 @@ OKLCH удобен тем, что его три параметра описыв�
 |---|---|---|
 | 1. Brand color | Радиогруппа «Do you have a color?»: I have a brand color / Pick a color. «I have a brand color»: обязательное поле «Brand color» (`required`, слово required не пишем — скринридер скажет сам), placeholder «for example, #E63946», подсказка «Supported formats: HEX, RGB, HSL, OKLCH»; под ним образец, описание и графики L, C, H (скрыты от скринридера). «Pick a color»: три панели Lightness, Chroma, Hue с ползунком `role="slider"` и кликом по графику, под ними образец и описание | Описание цвета один раз в live region. Ошибки — стандартная валидация браузера (`required` + `setCustomValidity`, проверка по Enter): «Enter a brand color to continue.» и «Can’t read this color.» |
 | 2. Text color and size | Радиогруппа «Text color»: White / Black. Группа «Text size»: поле «Font size» (px; rem только в Result CSS) и `<select>` «Font weight» (100–900). Кнопка «Show recommendation» | Вердикт выбора студента; кнопка выставляет рекомендованные цвет, размер и вес |
-| 3. Hover | Ползунок «Hover shift» (по умолчанию 4%), образец hover | Вердикт для hover-состояния |
+| 3. Hover | Ползунок «Hover shift» (0–20%, по умолчанию 4%), образец hover | Вердикт для hover-состояния |
 | 4. Result CSS | Блок кода (`<pre><code>`), кнопка «Copy Result CSS» | Подтверждение «CSS copied» в live region |
 
 Подпись школы, короткая история и ссылка на лист ожидания — в `<footer>`.
