@@ -82,7 +82,7 @@
 
 Шаги, каждый под своим заголовком:
 1. **Brand color:** выбор входа — «I have a color» (ввод цвета, он зафиксирован) или «Pick a color» (подбор ползунками L, C, H).
-2. **Text color:** выбор цвета и размера текста, проверка контраста.
+2. **Text color and size:** выбор цвета и размера текста, проверка контраста.
 3. **Hover:** hover-вариант фона.
 4. **Result CSS:** готовые переменные и кнопка копирования.
 
@@ -327,7 +327,7 @@ OKLCH удобен тем, что его три параметра описыв�
 | Шаг (h2) | Контролы | Что выводится |
 |---|---|---|
 | 1. Brand color | Радиогруппа «Do you have a color?»: I have a brand color / Pick a color. «I have a brand color»: обязательное поле «Brand color» (`required`, слово required не пишем — скринридер скажет сам), placeholder «for example, #E63946», подсказка «Supported formats: HEX, RGB, HSL, OKLCH»; под ним образец, описание и графики L, C, H (скрыты от скринридера). «Pick a color»: три панели Lightness, Chroma, Hue с ползунком `role="slider"` и кликом по графику, под ними образец и описание | Описание цвета один раз в live region. Ошибки — стандартная валидация браузера (`required` + `setCustomValidity`, проверка по Enter): «Enter a brand color to continue.» и «Can’t read this color.» |
-| 2. Text color | Радиогруппа «Text color»: White / Black. Группа «Text size»: поле «Font size» (px, рядом rem) и `<select>` «Font weight» (100–900). Кнопка «Show recommendation» | Вердикт выбора студента; кнопка выставляет рекомендованные цвет, размер и вес |
+| 2. Text color and size | Радиогруппа «Text color»: White / Black. Группа «Text size»: поле «Font size» (px; rem только в Result CSS) и `<select>` «Font weight» (100–900). Кнопка «Show recommendation» | Вердикт выбора студента; кнопка выставляет рекомендованные цвет, размер и вес |
 | 3. Hover | Ползунок «Hover shift» (по умолчанию 4%), образец hover | Вердикт для hover-состояния |
 | 4. Result CSS | Блок кода (`<pre><code>`), кнопка «Copy Result CSS» | Подтверждение «CSS copied» в live region |
 
@@ -356,7 +356,7 @@ OKLCH удобен тем, что его три параметра описыв�
 - Один `aria-live="polite"` регион на страницу для итогов.
 - Изменение ползунка с клавиатуры или мышью: ждём **около 500 мс** без изменений, потом один раз выводим итог.
 - Ползунки L, C, H и ввод цвета (шаг 2): итог — только описание цвета, например «Vivid warm red, 61%». Контраст звучит в шаге 3, при выборе цвета, размера и веса текста.
-- Итог шага 3: сначала цвет, потом вердикт WCAG, потом читаемость — отдельной строкой. Пример: «Vivid warm red, 61%. Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).» и с новой строки «Reads well according to APCA.»
+- Итог шага 2 (Text color): сначала пара «White text on vivid warm red, 61%.», потом вердикт WCAG, потом читаемость — отдельной строкой. Пример: «Vivid warm red, 61%. Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).» и с новой строки «Reads well according to APCA.»
 - `aria-valuetext` у ползунков: L — «61% lightness», C — слово и число, например «vivid, 0.208»: выше 0.18 слово всегда «vivid», и без числа сдвиг не слышен, H — «red, 22 degrees».
 
 ### 10.4. Вердикты

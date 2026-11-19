@@ -7,7 +7,7 @@ An OKLCH color picker for blind and low-vision front-end students: enter a brand
 One page, four steps under `h2` headings (spec 10.1):
 
 1. **Brand color** — "I have a brand color" (required field: HEX, `rgb()`, `hsl()`, `oklch()`) or "Pick a color" (Lightness, Chroma, Hue sliders and charts). The description, e.g. "Vivid warm red, 61%", is heard once; the swatch and charts are for sighted users only.
-2. **Text color** — white / black, any font size and weight 100–900; WCAG and APCA verdicts with their own icons; Show recommendation sets the color, size and weight.
+2. **Text color and size** — white / black, any font size and weight 100–900; WCAG and APCA verdicts with their own icons; Show recommendation sets the color, size and weight.
 3. **Hover** — darker for white text, lighter for black; the pair is checked again.
 4. **Result CSS** — CSS variables with a HEX fallback for `oklch(from …)`, Copy Result CSS.
 
