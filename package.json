@@ -1,0 +1,44 @@
+{
+  "name": "oklch-a11y",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "e2e": "playwright test",
+    "lint": "oxlint src e2e",
+    "size": "size-limit"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.14.0",
+    "@playwright/test": "^1.65.1",
+    "@size-limit/file": "^14.3.0",
+    "@tailwindcss/vite": "^4.3.5",
+    "daisyui": "^5.8.1",
+    "oxlint": "^1.93.0",
+    "size-limit": "^14.3.0",
+    "tailwindcss": "^4.3.5",
+    "typescript": "~7.0.2",
+    "vite": "^8.3.6",
+    "vitest": "^5.1.0"
+  },
+  "dependencies": {
+    "@colordx/core": "^7.3.0",
+    "nanostores": "^1.5.5"
+  },
+  "size-limit": [
+    {
+      "name": "JS",
+      "path": "dist/assets/*.js",
+      "limit": "12 kB"
+    },
+    {
+      "name": "CSS",
+      "path": "dist/assets/*.css",
+      "limit": "10 kB"
+    }
+  ]
+}
