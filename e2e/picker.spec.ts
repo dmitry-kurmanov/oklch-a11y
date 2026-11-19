@@ -43,7 +43,7 @@ test('has no axe violations with an error and a recommendation shown', async ({ 
 
 test('steps are headings in order', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 2 })).toHaveText([
-    '1. Brand color', '2. Text color', '3. Hover', '4. Result CSS',
+    '1. Brand color', '2. Text color and size', '3. Hover', '4. Result CSS',
   ])
 })
 
@@ -54,6 +54,7 @@ test('walks the main scenario for #E63946', async ({ page }) => {
   await page.getByRole('button', { name: 'Show recommendation' }).click()
   await expect(page.locator('#recommendation-title')).toHaveText('Recommended: white, 19px, bold (700)')
   await expect(page.getByLabel('Font size, px')).toHaveValue('19')
+  await expect(page.locator('#announcer')).toHaveText('Recommended: white 19px bold text on vivid warm red, 61%. Mid-lightness background: only large text reaches the contrast.Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).Reads well according to APCA.')
   await expect(page.getByLabel('Font weight')).toHaveValue('700')
   await expect(page.locator('#wcag-text')).toHaveText('Large text only. Passes WCAG AA, 4.17:1 (needs 3:1).')
   await expect(page.locator('#hover-wcag-text')).toHaveText('Passes WCAG AA, 4.94:1 (needs 3:1).')
@@ -65,6 +66,7 @@ test('walks the main scenario for #E63946', async ({ page }) => {
 
 test('formally passing black text is hard to read', async ({ page }) => {
   await page.getByRole('radio', { name: 'Black' }).check()
+  await expect(page.locator('#announcer')).toHaveText('Black 16px regular text on vivid warm red, 61%. Hard to read according to APCA.Passes WCAG AA, 5.04:1 (needs 4.5:1).')
   await page.getByLabel('Font weight').selectOption('600')
   await expect(page.locator('#wcag-text')).toHaveText('Passes WCAG AA, 5.04:1 (needs 4.5:1).')
   await expect(page.locator('#apca-text')).toHaveText('Hard to read.')
@@ -146,4 +148,14 @@ test('clearing the brand color hides the results again', async ({ page }) => {
   await expect(page.locator('#description')).toBeHidden()
   await expect(page.locator('.needs-color-note').first()).toBeVisible()
   await expect(page.getByRole('textbox', { name: /Brand color/ })).not.toHaveAccessibleDescription(/Vivid warm red/)
+})
+
+test('entering the text color step tells the current state', async ({ page }) => {
+  await page.getByRole('textbox', { name: /Brand color/ }).focus()
+  await page.keyboard.press('Tab')
+  await expect(page.getByRole('radio', { name: 'White' })).toBeFocused()
+  await expect(page.locator('#announcer')).toContainText('White 16px regular text on vivid warm red, 61%. Fails WCAG AA, 4.17:1 (needs 4.5:1). Try large bold text.')
+  await page.keyboard.press('Tab')
+  await page.keyboard.press('Shift+Tab')
+  await expect(page.locator('#announcer')).toContainText('White 16px regular text on vivid warm red, 61%.')
 })

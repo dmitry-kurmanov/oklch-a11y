@@ -1,13 +1,13 @@
 import './style.css'
 import { drawSlice, pickFromChart } from './components/chart.ts'
 import { createSlider, SETTLE_DELAY } from './components/slider.ts'
-import { NO_RECOMMENDATION, recommend, type TextCheck, type TextColor } from './lib/contrast.ts'
+import { NO_RECOMMENDATION, recommend, weightName, type TextCheck, type TextColor, type TextStyle } from './lib/contrast.ts'
 import { hoverDirection } from './lib/css.ts'
 import { debounce } from './lib/debounce.ts'
 import {
   CHROMA_HINT, chromaValueText, describeColor, hueHint, hueName, hueValueText, LIGHTNESS_HINT, lightnessValueText,
 } from './lib/describe.ts'
-import { clampChannel, formatOklch, parseColor, round, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
+import { clampChannel, formatOklch, parseColor, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
 import { initPreferences } from './preferences.ts'
 import {
   $check, $color, $css, $editable, $fontSize, $fontWeight, $hasColor, $hover, $hoverCheck, $original, $shift, $source,
@@ -37,13 +37,31 @@ function scheduleAnnouncement(lines: () => string[]): void {
   announceLater()
 }
 
+function verdicts(check: TextCheck): string[] {
+  const wcag = check.wcagText
+  const apca = `${check.apcaText} according to APCA.`
+  return check.wcagPasses && !check.readsWell ? [apca, wcag] : [wcag, apca]
+}
+
 function verdictLines(prefix: string, check: TextCheck): string[] {
-  return [`${prefix}. ${check.wcagText}`, `${check.apcaText} according to APCA.`]
+  const [first, second] = verdicts(check)
+  return [`${prefix}. ${first}`, second]
+}
+
+function textPair(style: TextStyle): string {
+  const color = style.color === 'white' ? 'White' : 'Black'
+  return `${color} ${style.size}px ${weightName(style.weight)} text on ${lowerFirst(describeColor($color.get()))}`
 }
 
 const descriptionSummary = (): string[] => [describeColor($color.get())]
 
-const colorSummary = (): string[] => verdictLines(describeColor($color.get()), $check.get())
+function lowerFirst(text: string): string {
+  return `${text[0].toLowerCase()}${text.slice(1)}`
+}
+
+const colorSummary = (): string[] => {
+  return verdictLines(textPair($style.get()), $check.get())
+}
 
 const hoverSummary = (): string[] => {
   const percent = Math.round($shift.get() * 100)
@@ -203,10 +221,6 @@ $textColor.subscribe(text => {
   shiftSlider.set($shift.get())
 })
 
-$fontSize.subscribe(size => {
-  byId('font-size-rem').textContent = `${round(size / 16, 4)}rem`
-})
-
 $css.subscribe(css => {
   byId('css-code').textContent = css
   byId('copy-status').hidden = true
@@ -258,7 +272,7 @@ byId('recommend').addEventListener('click', () => {
   byId('recommendation-title').textContent = result.title
   byId('recommendation-text').textContent = result.explanation
   const check = $check.get()
-  announceNow([`${result.title}. ${result.explanation}`, check.wcagText, `${check.apcaText} according to APCA.`])
+  announceNow([`Recommended: ${lowerFirst(textPair(result.style))}. ${result.explanation}`, ...verdicts(check)])
 })
 
 byId('copy').addEventListener('click', async () => {
@@ -304,4 +318,12 @@ $hasColor.subscribe(hasColor => {
   for (const note of document.querySelectorAll<HTMLElement>('.needs-color-note')) note.hidden = hasColor
   for (const body of document.querySelectorAll<HTMLElement>('.step-body')) body.hidden = !hasColor
   byId('color-view').hidden = !hasColor
+})
+
+const textStep = document.querySelector<HTMLElement>('section[aria-labelledby="step-2-title"]')!
+textStep.addEventListener('focusin', event => {
+  if (textStep.contains(event.relatedTarget as Node | null)) return
+  setTimeout(() => {
+    if (textStep.contains(document.activeElement)) announceNow(colorSummary())
+  }, SETTLE_DELAY)
 })
