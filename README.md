@@ -40,11 +40,13 @@ npm run size       # size-limit, run after build
 
 - Unit tests (Vitest): the six test colors from spec 10.6 — OKLCH, WCAG ratio (±0.01), APCA Lc (±1), recommendation, hover; verdict texts from 10.4; color words; parsing; the CSS from 3.9.
 - E2E (Playwright): axe WCAG 2.0–2.2 A/AA in light and dark themes, with an error and a recommendation shown; headings; the main scenario; slider silence while the arrow is held; hue wrap; copy.
-- size-limit: JS 12 kB, CSS 10 kB (brotli). JS was 11.7 kB; raised by 0.3 kB for the given / pick modes.
+- size-limit: JS 14.5 kB, CSS 10.1 kB (brotli). Raised from 11.7 / 10 kB for the given / pick modes (+0.3 kB), the screen range check (+0.2 kB), the ISCC–NBS names table (+2.2 kB) and the daisyUI validator (+30 B).
 - Not yet: NVDA + Firefox, VoiceOver on Mac and iPhone (spec 5).
 
 ## Known compromises
 
+- The boundary is sRGB for every screen: a combination outside it is named ("Outside the standard screen range. Lower chroma to … or less.") and blocks steps 2–4; tracks and charts are empty there, as on oklch.com. Wider gamuts (P3) are not offered.
+- Color names in parentheses come from the ISCC–NBS centroids (nearest in OKLab); the data is Foster's Munsell-to-sRGB conversion, see THIRD_PARTY_NOTICES.md.
 - The button samples are excluded from axe: they show the student's pair on purpose, including failing ones.
 - `#F1FAEE` hover is `#F9FFF6` (20.66:1), not `#FEFFFB` from spec 10.6: the hex fallback clips to sRGB the way browsers render `oklch()`.
 - To check on real screen readers first (spec 7): whether NVDA speaks the slider value and the live region as two phrases, and whether VoiceOver on iPhone moves a custom `role="slider"` with swipes up and down.
