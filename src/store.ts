@@ -1,7 +1,7 @@
 import { atom, computed } from 'nanostores'
 import { checkText, REGULAR, type TextColor } from './lib/contrast.ts'
 import { buildCss, hoverColor } from './lib/css.ts'
-import { parseColor, toRgb, type Oklch } from './lib/oklch.ts'
+import { inSrgb, parseColor, toRgb, type Oklch } from './lib/oklch.ts'
 
 export const EXAMPLE_COLOR = '#E63946'
 
@@ -11,6 +11,7 @@ export type ColorSource = 'given' | 'pick'
 export const $source = atom<ColorSource>('given')
 export const $original = atom<Oklch | null>(null)
 export const $hasColor = computed([$source, $original], (source, original) => source === 'pick' || original !== null)
+export const $inGamut = computed($color, inSrgb)
 export const $editable = computed($source, source => source === 'pick')
 export const $textColor = atom<TextColor>('white')
 export const $fontSize = atom(16)

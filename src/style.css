@@ -51,6 +51,14 @@
   width: 100%;
 }
 
+.swatch-unavailable {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px dashed var(--color-base-300);
+  font-size: 0.875rem;
+}
+
 canvas,
 .swatch {
   forced-color-adjust: none;

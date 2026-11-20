@@ -7,10 +7,10 @@ import { debounce } from './lib/debounce.ts'
 import {
   CHROMA_HINT, chromaValueText, describeColor, hueHint, hueName, hueValueText, LIGHTNESS_HINT, lightnessValueText,
 } from './lib/describe.ts'
-import { clampChannel, formatOklch, parseColor, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
+import { clampChannel, formatOklch, inSrgb, maxChroma, parseColor, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
 import { initPreferences } from './preferences.ts'
 import {
-  $check, $color, $css, $editable, $fontSize, $fontWeight, $hasColor, $hover, $hoverCheck, $original, $shift, $source,
+  $check, $color, $css, $editable, $fontSize, $fontWeight, $hasColor, $hover, $inGamut, $hoverCheck, $original, $shift, $source,
   $style, $textColor, type ColorSource,
 } from './store.ts'
 
@@ -53,7 +53,16 @@ function textPair(style: TextStyle): string {
   return `${color} ${style.size}px ${weightName(style.weight)} text on ${lowerFirst(describeColor($color.get()))}`
 }
 
-const descriptionSummary = (): string[] => [describeColor($color.get())]
+const OUT_OF_RANGE = 'Outside the standard screen range'
+
+function outOfRangeAdvice(color: Oklch): string {
+  return `Lower chroma to ${(Math.floor(maxChroma(color.l, color.h) * 100) / 100).toFixed(2)} or less.`
+}
+
+const descriptionSummary = (): string[] => {
+  const color = $color.get()
+  return inSrgb(color) ? [describeColor(color)] : [`${OUT_OF_RANGE}. ${outOfRangeAdvice(color)}`]
+}
 
 function lowerFirst(text: string): string {
   return `${text[0].toLowerCase()}${text.slice(1)}`
@@ -182,9 +191,13 @@ function paintSample(id: string, background: string): void {
 
 $color.subscribe(color => {
   const hex = toHex(color)
-  byId('swatch').style.background = hex
-  byId('description').textContent = describeColor(color)
-  byId('oklch-text').textContent = `${formatOklch(color)} · ${hex}`
+  const inRange = inSrgb(color)
+  const swatch = byId('swatch')
+  swatch.style.background = inRange ? hex : ''
+  swatch.textContent = inRange ? '' : 'Unavailable'
+  swatch.classList.toggle('swatch-unavailable', !inRange)
+  byId('description').textContent = inRange ? describeColor(color) : OUT_OF_RANGE
+  byId('oklch-text').textContent = inRange ? `${formatOklch(color)} · ${hex}` : `${formatOklch(color)} · ${outOfRangeAdvice(color)}`
   byId('l-value').textContent = `${Math.round(color.l * 100)}%`
   byId('c-value').textContent = chromaValueText(color.c)
   byId('h-value').textContent = `${hueName(color.h)}, ${Math.round(color.h) % 360}°`
@@ -314,11 +327,18 @@ $source.subscribe(source => {
   else view.append(summary)
 })
 
-$hasColor.subscribe(hasColor => {
-  for (const note of document.querySelectorAll<HTMLElement>('.needs-color-note')) note.hidden = hasColor
-  for (const body of document.querySelectorAll<HTMLElement>('.step-body')) body.hidden = !hasColor
-  byId('color-view').hidden = !hasColor
-})
+for (const store of [$hasColor, $inGamut]) {
+  store.subscribe(() => {
+    const hasColor = $hasColor.get()
+    const ready = hasColor && $inGamut.get()
+    for (const note of document.querySelectorAll<HTMLElement>('.needs-color-note')) {
+      note.hidden = ready
+      note.textContent = hasColor ? 'Choose a color within the standard screen range in step 1 first.' : 'Enter your brand color in step 1 first.'
+    }
+    for (const body of document.querySelectorAll<HTMLElement>('.step-body')) body.hidden = !ready
+    byId('color-view').hidden = !hasColor
+  })
+}
 
 const textStep = document.querySelector<HTMLElement>('section[aria-labelledby="step-2-title"]')!
 textStep.addEventListener('focusin', event => {

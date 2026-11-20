@@ -1,4 +1,5 @@
-import type { Oklch } from './oklch.ts'
+import { ISCC_NBS } from './iscc-nbs.ts'
+import { hexToOklab, toHex, type Oklch } from './oklch.ts'
 
 const HUE_ANCHORS: [string, number][] = [
   ['red', 29],
@@ -52,12 +53,29 @@ export function lightnessPercent(l: number): number {
   return Math.round(l * 100)
 }
 
-export function describeColor({ l, c, h }: Oklch): string {
+const CENTROID_LABS = ISCC_NBS.map(({ name, hex }) => ({ name, lab: hexToOklab(hex) }))
+
+export function standardName(color: Oklch): string {
+  const [l, a, b] = hexToOklab(toHex(color))
+  let best = CENTROID_LABS[0]
+  let bestDistance = Infinity
+  for (const centroid of CENTROID_LABS) {
+    const distance = (centroid.lab[0] - l) ** 2 + (centroid.lab[1] - a) ** 2 + (centroid.lab[2] - b) ** 2
+    if (distance < bestDistance) {
+      best = centroid
+      bestDistance = distance
+    }
+  }
+  return best.name
+}
+
+export function describeColor(color: Oklch): string {
+  const { c, h } = color
   const words = c < GREY_CHROMA
     ? ['grey']
     : [chromaWord(c), isWarm(h) ? 'warm' : 'cool', hueName(h)]
   const phrase = words.join(' ')
-  return `${phrase[0].toUpperCase()}${phrase.slice(1)}, ${lightnessPercent(l)}%`
+  return `${phrase[0].toUpperCase()}${phrase.slice(1)} (${standardName(color)})`
 }
 
 export function lightnessValueText(l: number): string {

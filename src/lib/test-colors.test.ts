@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { apcaLc, checkText, formatRatio, recommend, TEXT_RGB, wcagRatio } from './contrast.ts'
 import { buildCss, hoverColor } from './css.ts'
 import { chromaValueText, describeColor, hueHint, hueValueText, lightnessValueText } from './describe.ts'
-import { formatOklch, parseColor, toHex, toRgb } from './oklch.ts'
+import { formatOklch, inSrgb, maxChroma, parseColor, toHex, toRgb } from './oklch.ts'
 
 const SPEC_COLORS = [
   { hex: '#E63946', oklch: 'oklch(61.2% 0.208 22.2)', white: [4.17, 73], black: [5.04, 37], rec: ['white', 19], hover: '#D7283A', hoverRatio: 4.94 },
@@ -82,8 +82,9 @@ describe('color words (10.2, 10.3)', () => {
   const red = parseColor('#E63946')!
 
   it('describes the color with the main word first', () => {
-    expect(describeColor(red)).toBe('Vivid warm red, 61%')
-    expect(describeColor(parseColor('#808080')!)).toBe('Grey, 60%')
+    expect(describeColor(red)).toBe('Vivid warm red (vivid reddish orange)')
+    expect(describeColor(parseColor('#808080')!)).toBe('Grey (medium gray)')
+    expect(describeColor(parseColor('#3E3A00')!)).toBe('Soft warm yellow (dark olive)')
   })
 
   it('gives slider value texts and hue hint', () => {
@@ -129,5 +130,19 @@ describe('result CSS (3.9)', () => {
       '  --brand-text-weight: 700;',
       '}',
     ].join('\n'))
+  })
+})
+
+describe('screen range (sRGB)', () => {
+  it('finds the chroma limit for a dark yellow', () => {
+    const limit = maxChroma(0.34, 105)
+    expect(limit).toBeGreaterThan(0.06)
+    expect(limit).toBeLessThan(0.09)
+    expect(inSrgb({ l: 0.34, c: limit, h: 105 })).toBe(true)
+  })
+
+  it('reports a dark vivid yellow as outside sRGB', () => {
+    expect(inSrgb({ l: 0.34, c: 0.37, h: 105 })).toBe(false)
+    expect(inSrgb(parseColor('#E63946')!)).toBe(true)
   })
 })

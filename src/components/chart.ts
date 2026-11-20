@@ -1,7 +1,6 @@
 import { encodeChannel, oklchToLinearSrgb, RANGE, type Channel, type Oklch } from '../lib/oklch.ts'
 
 const GAMUT_EPSILON = 1e-4
-const OUT_OF_GAMUT_ALPHA = 90
 
 export function drawSlice(canvas: HTMLCanvasElement, color: Oklch): void {
   const x = canvas.dataset.x as Channel
@@ -17,12 +16,15 @@ export function drawSlice(canvas: HTMLCanvasElement, color: Oklch): void {
       if (y) point[y] = (1 - row / (height - 1)) * RANGE[y]
       const linear = oklchToLinearSrgb(point)
       const inGamut = linear.every(v => v >= -GAMUT_EPSILON && v <= 1 + GAMUT_EPSILON)
-      if (!inGamut && y) continue
+      if (!inGamut) {
+        if (!y && x === 'c') break
+        continue
+      }
       const i = (row * width + column) * 4
       image.data[i] = encodeChannel(linear[0])
       image.data[i + 1] = encodeChannel(linear[1])
       image.data[i + 2] = encodeChannel(linear[2])
-      image.data[i + 3] = inGamut ? 255 : OUT_OF_GAMUT_ALPHA
+      image.data[i + 3] = 255
     }
   }
   context.putImageData(image, 0, 0)
