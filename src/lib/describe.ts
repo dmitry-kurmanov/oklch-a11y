@@ -1,5 +1,5 @@
 import { ISCC_NBS } from './iscc-nbs.ts'
-import { hexToOklab, toHex, type Oklch } from './oklch.ts'
+import { hexToOklab, inSrgb, maxChroma, toHex, type Oklch } from './oklch.ts'
 
 const HUE_ANCHORS: [string, number][] = [
   ['red', 29],
@@ -101,3 +101,38 @@ export function hueHint(h: number): string {
 
 export const LIGHTNESS_HINT = 'left — darker, right — lighter'
 export const CHROMA_HINT = 'left — greyer, right — more vivid'
+
+function nearestLightness(color: Oklch, direction: 1 | -1): number | null {
+  const start = Math.round(color.l * 100)
+  for (let percent = start + direction; percent >= 0 && percent <= 100; percent += direction) {
+    if (inSrgb({ ...color, l: percent / 100 })) return percent
+  }
+  return null
+}
+
+function nearestHue(color: Oklch, direction: 1 | -1): number | null {
+  const start = Math.round(color.h)
+  for (let step = 1; step < 180; step++) {
+    const hue = (((start + direction * step) % 360) + 360) % 360
+    if (inSrgb({ ...color, h: hue })) return hue
+  }
+  return null
+}
+
+function listOptions(options: string[]): string {
+  if (options.length < 2) return options.join('')
+  return `${options.slice(0, -1).join(', ')}, or ${options[options.length - 1]}`
+}
+
+export function screenRangeAdvice(color: Oklch): string {
+  const options = [`lower chroma to ${(Math.floor(maxChroma(color.l, color.h) * 100) / 100).toFixed(2)}`]
+  const darker = nearestLightness(color, -1)
+  const lighter = nearestLightness(color, 1)
+  if (darker !== null) options.push(`lower lightness to ${darker}%`)
+  if (lighter !== null) options.push(`raise lightness to ${lighter}%`)
+  const hues = [nearestHue(color, -1), nearestHue(color, 1)].filter((hue): hue is number => hue !== null)
+  const hueTargets = [...new Set(hues)].map(hue => `${hue}° (${hueName(hue)})`)
+  if (hueTargets.length > 0) options.push(`move hue to ${hueTargets.join(' or ')}`)
+  const sentence = listOptions(options)
+  return `${sentence[0].toUpperCase()}${sentence.slice(1)}.`
+}

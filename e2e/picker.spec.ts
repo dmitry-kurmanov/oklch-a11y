@@ -167,7 +167,7 @@ test('an impossible combination is named and blocks the next steps', async ({ pa
   await expect(chroma).toHaveAttribute('aria-valuenow', '0.37')
   await expect(page.getByRole('slider', { name: 'Lightness' })).toHaveAttribute('aria-valuetext', '61% lightness')
   await expect(page.locator('#description')).toHaveText('Outside the standard screen range')
-  await expect(page.locator('#announcer')).toHaveText('Outside the standard screen range. Lower chroma to 0.24 or less.')
+  await expect(page.locator('#announcer')).toHaveText('Outside the standard screen range. Lower chroma to 0.24.')
   await expect(page.locator('.needs-color-note').first()).toHaveText('Choose a color within the standard screen range in step 1 first.')
   await expect(page.locator('#css-code')).toBeHidden()
 })

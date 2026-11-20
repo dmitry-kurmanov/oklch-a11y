@@ -5,9 +5,9 @@ import { NO_RECOMMENDATION, recommend, weightName, type TextCheck, type TextColo
 import { hoverDirection } from './lib/css.ts'
 import { debounce } from './lib/debounce.ts'
 import {
-  CHROMA_HINT, chromaValueText, describeColor, hueHint, hueName, hueValueText, LIGHTNESS_HINT, lightnessValueText,
+  CHROMA_HINT, chromaValueText, describeColor, hueHint, hueName, hueValueText, screenRangeAdvice, LIGHTNESS_HINT, lightnessValueText,
 } from './lib/describe.ts'
-import { clampChannel, formatOklch, inSrgb, maxChroma, parseColor, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
+import { clampChannel, formatOklch, inSrgb, parseColor, toHex, toRgb, type Channel, type Oklch } from './lib/oklch.ts'
 import { initPreferences } from './preferences.ts'
 import {
   $check, $color, $css, $editable, $fontSize, $fontWeight, $hasColor, $hover, $inGamut, $hoverCheck, $original, $shift, $source,
@@ -55,13 +55,10 @@ function textPair(style: TextStyle): string {
 
 const OUT_OF_RANGE = 'Outside the standard screen range'
 
-function outOfRangeAdvice(color: Oklch): string {
-  return `Lower chroma to ${(Math.floor(maxChroma(color.l, color.h) * 100) / 100).toFixed(2)} or less.`
-}
 
 const descriptionSummary = (): string[] => {
   const color = $color.get()
-  return inSrgb(color) ? [describeColor(color)] : [`${OUT_OF_RANGE}. ${outOfRangeAdvice(color)}`]
+  return inSrgb(color) ? [describeColor(color)] : [`${OUT_OF_RANGE}. ${screenRangeAdvice(color)}`]
 }
 
 function lowerFirst(text: string): string {
@@ -197,7 +194,7 @@ $color.subscribe(color => {
   swatch.textContent = inRange ? '' : 'Unavailable'
   swatch.classList.toggle('swatch-unavailable', !inRange)
   byId('description').textContent = inRange ? describeColor(color) : OUT_OF_RANGE
-  byId('oklch-text').textContent = inRange ? `${formatOklch(color)} · ${hex}` : `${formatOklch(color)} · ${outOfRangeAdvice(color)}`
+  byId('oklch-text').textContent = inRange ? `${formatOklch(color)} · ${hex}` : `${formatOklch(color)} · ${screenRangeAdvice(color)}`
   byId('l-value').textContent = `${Math.round(color.l * 100)}%`
   byId('c-value').textContent = chromaValueText(color.c)
   byId('h-value').textContent = `${hueName(color.h)}, ${Math.round(color.h) % 360}°`

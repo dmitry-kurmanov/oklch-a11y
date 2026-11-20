@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import { apcaLc, checkText, formatRatio, recommend, TEXT_RGB, wcagRatio } from './contrast.ts'
 import { buildCss, hoverColor } from './css.ts'
-import { chromaValueText, describeColor, hueHint, hueValueText, lightnessValueText } from './describe.ts'
+import { chromaValueText, describeColor, hueHint, hueValueText, lightnessValueText, screenRangeAdvice } from './describe.ts'
 import { formatOklch, inSrgb, maxChroma, parseColor, toHex, toRgb } from './oklch.ts'
 
 const SPEC_COLORS = [
@@ -144,5 +144,17 @@ describe('screen range (sRGB)', () => {
   it('reports a dark vivid yellow as outside sRGB', () => {
     expect(inSrgb({ l: 0.34, c: 0.37, h: 105 })).toBe(false)
     expect(inSrgb(parseColor('#E63946')!)).toBe(true)
+  })
+})
+
+describe('screen range advice', () => {
+  it('offers chroma and both hue directions when lightness cannot help', () => {
+    expect(screenRangeAdvice({ l: 0.6, c: 0.22, h: 114 }))
+      .toBe('Lower chroma to 0.13, or move hue to 33° (red) or 278° (blue).')
+  })
+
+  it('offers lightness when it brings the color back', () => {
+    expect(screenRangeAdvice({ l: 0.5, c: 0.15, h: 105 }))
+      .toBe('Lower chroma to 0.10, raise lightness to 71%, or move hue to 42° (red-orange) or 137° (green).')
   })
 })
